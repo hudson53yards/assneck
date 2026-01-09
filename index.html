@@ -187,7 +187,7 @@
             border-radius: 12px;
             padding: 14px 16px;
             display: grid;
-            grid-template-columns: 1fr auto auto;
+            grid-template-columns: 1fr auto auto auto;
             align-items: center;
             gap: 12px;
             transition: all 0.2s ease;
@@ -235,6 +235,15 @@
             border-radius: 8px;
             min-width: 72px;
             text-align: center;
+        }
+
+        .stock-cost-basis {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: right;
+            min-width: 70px;
         }
 
         .stock-change.positive {
@@ -747,6 +756,7 @@
                             </div>
                             <div class="stock-price">${q.price != null ? '$' + formatNumber(q.price) : '—'}</div>
                             <div class="stock-change ${cls}">${q.changePercent != null ? sign + formatNumber(q.changePercent) + '%' : '—'}</div>
+                            <div class="stock-cost-basis">${q.costBasis ? '$' + formatNumber(q.costBasis, 0) : '—'}</div>
                         </div>`;
                 });
                 html += '</div></div>';
