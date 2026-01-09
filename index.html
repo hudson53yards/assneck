@@ -181,6 +181,33 @@
             gap: 8px;
         }
 
+        .column-headers {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: var(--bg-primary);
+            position: sticky;
+            top: 117px;
+            z-index: 40;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .col-header {
+            text-align: right;
+        }
+
+        .col-header:first-child {
+            text-align: left;
+        }
+
         .stock-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -586,6 +613,7 @@
                     <div class="setting-option active" data-value="ticker">A-Z</div>
                     <div class="setting-option" data-value="changePercent">% Change</div>
                     <div class="setting-option" data-value="price">Price</div>
+                    <div class="setting-option" data-value="costBasis">Cost Basis</div>
                 </div>
             </div>
 
@@ -704,6 +732,7 @@
                 switch (state.sortBy) {
                     case 'changePercent': return (b.changePercent || 0) - (a.changePercent || 0);
                     case 'price': return (b.price || 0) - (a.price || 0);
+                    case 'costBasis': return (b.costBasis || 0) - (a.costBasis || 0);
                     default: return (a.symbol || '').localeCompare(b.symbol || '');
                 }
             });
@@ -742,6 +771,12 @@
                             <div class="sector-icon ${SECTOR_CLASSES[sector]}">${SECTOR_ICONS[sector]}</div>
                             <div class="sector-name">${sector}</div>
                             <div class="sector-count">${grouped[sector].length}</div>
+                        </div>
+                        <div class="column-headers">
+                            <div class="col-header">Symbol</div>
+                            <div class="col-header">Price</div>
+                            <div class="col-header">Change</div>
+                            <div class="col-header">Cost Basis</div>
                         </div>
                         <div class="stocks-grid">`;
                 
