@@ -218,4 +218,452 @@
             min-width: auto;
         }
 
-        .stock-quantity, .stock-avg-cost, .stock-
+        .stock-pe, .stock-ex-date, .stock-yield, .stock-gain {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: right;
+            min-width: 60px;
+        }
+
+        .stock-gain.positive {
+            color: var(--green);
+        }
+
+        .stock-gain.negative {
+            color: var(--red);
+        }
+
+        .stock-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .stock-card:active {
+            transform: scale(0.98);
+            background: var(--bg-tertiary);
+        }
+
+        .stock-data {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stock-data.default-view {
+            display: grid;
+        }
+
+        .stock-data.alt-view {
+            display: none;
+            grid-template-columns: auto auto auto auto;
+        }
+
+        .stock-card.expanded .stock-data.default-view {
+            display: none;
+        }
+
+        .stock-card.expanded .stock-data.alt-view {
+            display: grid;
+        }
+
+        .stock-card.expanded {
+            background: var(--bg-tertiary);
+            border-color: var(--accent);
+        }
+
+        .stock-info {
+            min-width: 0;
+        }
+
+        .stock-ticker {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .stock-name {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .stock-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            text-align: right;
+        }
+
+        .stock-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 8px;
+            min-width: 72px;
+            text-align: center;
+        }
+
+        .stock-cost-basis {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: right;
+            min-width: 70px;
+        }
+
+        .stock-change.positive {
+            color: var(--green);
+            background: var(--green-bg);
+        }
+
+        .stock-change.negative {
+            color: var(--red);
+            background: var(--red-bg);
+        }
+
+        .stock-change.neutral {
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-radius: 24px 24px 0 0;
+            max-height: 85vh;
+            max-height: 85dvh;
+            z-index: 1001;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .modal.active {
+            transform: translateY(0);
+        }
+
+        .modal-handle {
+            width: 36px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin: 12px auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .modal-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .setting-group {
+            margin-bottom: 24px;
+        }
+
+        .setting-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .setting-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .setting-option {
+            padding: 10px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .setting-option.active {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .setting-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .setting-input:focus {
+            border-color: var(--accent);
+        }
+
+        .setting-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .setting-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .sheet-status {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .sheet-status.success {
+            color: var(--green);
+        }
+
+        .sheet-status.error {
+            color: var(--red);
+        }
+
+        .ticker-preview {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            max-height: 80px;
+            overflow-y: auto;
+            word-break: break-all;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: all 0.2s ease;
+        }
+
+        .save-btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .error-banner {
+            background: var(--red-bg);
+            border: 1px solid var(--red);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--red);
+        }
+
+        /* Sector colors */
+        .sector-tech { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .sector-finance { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+        .sector-health { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
+        .sector-energy { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .sector-consumer { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .sector-industrial { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
+        .sector-telecom { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+        .sector-etf { background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); }
+        .sector-other { background: linear-gradient(135deg, #71717a 0%, #52525b 100%); }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">Loading...</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">PORTFOLIO</div>
+            <div class="header-actions">
+                <button class="icon-btn" id="refreshBtn" title="Refresh">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                        <path d="M21 3v5h-5"/>
+                    </svg>
+                </button>
+                <button class="icon-btn" id="settingsBtn" title="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="status-bar">
+            <div id="sheetStatus">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Loading...</span>
+            </div>
+            <div id="lastUpdated">--:--</div>
+        </div>
+
+        <div id="errorBanner" class="error-banner" style="display: none;"></div>
+
+        <main id="stocksContainer"></main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="modal" id="settingsModal">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+            <div class="modal-title">Settings</div>
+            <button class="modal-close" id="modalClose">×</button>
+        </div>
+        <div class="modal-content">
+            <div class="setting-group">
+                <div class="setting-label">Google Apps Script URL</div>
+                <textarea class="setting-input" id="sheetUrlInput" rows="3" placeholder="https://script.google.com/macros/s/.../exec"></textarea>
+                <div class="setting-hint">Your deployed Apps Script web app URL</div>
+                <div class="sheet-status" id="sheetUrlStatus"></div>
+                <div class="ticker-preview" id="tickerPreview" style="display: none;"></div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">Sort Within Sectors</div>
+                <div class="setting-options" id
