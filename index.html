@@ -666,4 +666,369 @@
 
             <div class="setting-group">
                 <div class="setting-label">Sort Within Sectors</div>
-                <div class="setting-options" id
+                <div class="setting-options" id="sortOptions">
+                    <div class="setting-option active" data-value="ticker">A-Z</div>
+                    <div class="setting-option" data-value="changePercent">% Change</div>
+                    <div class="setting-option" data-value="price">Price</div>
+                    <div class="setting-option" data-value="costBasis">Cost Basis</div>
+                </div>
+            </div>
+
+            <button class="save-btn" id="saveSettings">Save & Refresh</button>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuw8GBowkDeDjXiAMlapHK9bl9429hlTYOdBU2sI0C-hlKsfsgzhkt-elytlzjBe0JbQ/exec';
+
+        const SECTOR_MAP = {
+            'AAPL': 'Technology', 'MSFT': 'Technology', 'NVDA': 'Technology', 'QCOM': 'Technology',
+            'TSM': 'Technology', 'NRIX': 'Technology', 'GOOGL': 'Technology', 'GOOG': 'Technology',
+            'META': 'Technology', 'AMZN': 'Technology', 'CRM': 'Technology', 'ADBE': 'Technology',
+            'INTC': 'Technology', 'AMD': 'Technology', 'AVGO': 'Technology', 'CSCO': 'Technology',
+            'ORCL': 'Technology', 'IBM': 'Technology', 'SMH': 'Technology',
+            
+            'JPM': 'Financial', 'LYG': 'Financial', 'V': 'Financial', 'WFC': 'Financial',
+            'BAC': 'Financial', 'GS': 'Financial', 'MS': 'Financial', 'C': 'Financial',
+            'AXP': 'Financial', 'BLK': 'Financial', 'MA': 'Financial', 'WFC-L': 'Financial',
+            'BAC-L': 'Financial', 'JEPI': 'Financial', 'JEPQ': 'Financial',
+            
+            'JNJ': 'Healthcare', 'LLY': 'Healthcare', 'MRK': 'Healthcare', 'NVS': 'Healthcare',
+            'PFE': 'Healthcare', 'REGN': 'Healthcare', 'VRTX': 'Healthcare', 'NTRA': 'Healthcare',
+            'ORIC': 'Healthcare', 'RVMD': 'Healthcare', 'STOK': 'Healthcare', 'UNH': 'Healthcare',
+            'ABBV': 'Healthcare', 'TMO': 'Healthcare', 'ABT': 'Healthcare', 'BMY': 'Healthcare',
+            'AMGN': 'Healthcare', 'GILD': 'Healthcare', 'EXEL': 'Healthcare',
+            
+            'PSX': 'Energy', 'SLB': 'Energy', 'XOM': 'Energy', 'CVX': 'Energy',
+            'COP': 'Energy', 'EOG': 'Energy', 'OXY': 'Energy', 'BKR': 'Energy',
+            
+            'MCD': 'Consumer', 'PM': 'Consumer', 'WMT': 'Consumer', 'KO': 'Consumer',
+            'PEP': 'Consumer', 'PG': 'Consumer', 'COST': 'Consumer', 'NKE': 'Consumer',
+            'SBUX': 'Consumer', 'HD': 'Consumer', 'DIS': 'Consumer', 'NFLX': 'Consumer',
+            
+            'T': 'Telecom', 'VZ': 'Telecom', 'TMUS': 'Telecom', 'T-A': 'Telecom',
+            
+            'RIVN': 'Automotive', 'TSLA': 'Automotive', 'F': 'Automotive', 'GM': 'Automotive',
+            
+            'CAT': 'Industrial', 'DE': 'Industrial', 'GE': 'Industrial', 'HON': 'Industrial',
+            'BA': 'Industrial',
+            
+            'DUK': 'Utilities', 'DUK-A': 'Utilities',
+            
+            'HHH': 'Real Estate',
+            
+            'BRK.B': 'Conglomerate',
+            
+            'QQQ': 'ETF', 'SPY': 'ETF', 'VOO': 'ETF', 'VTWO': 'ETF', 'VTWV': 'ETF',
+            'XLE': 'ETF', 'XLF': 'ETF', 'XLI': 'ETF', 'XLK': 'ETF', 'XLU': 'ETF',
+            'VTI': 'ETF', 'IWM': 'ETF', 'DIA': 'ETF', 'SCHD': 'ETF', 'IVV': 'ETF',
+            'IWO': 'ETF', 'INDA': 'ETF', 'EQWL': 'ETF', 'GGRW': 'ETF', 'FCLD': 'ETF'
+        };
+
+        const SECTOR_ICONS = {
+            'Technology': '💻', 'Financial': '🏦', 'Healthcare': '💊', 'Energy': '⚡',
+            'Consumer': '🛒', 'Telecom': '📡', 'Automotive': '🚗', 'ETF': '📊',
+            'Industrial': '🏭', 'Utilities': '💡', 'Real Estate': '🏠', 'Conglomerate': '🏢',
+            'Other': '📈'
+        };
+
+        const SECTOR_CLASSES = {
+            'Technology': 'sector-tech', 'Financial': 'sector-finance', 'Healthcare': 'sector-health',
+            'Energy': 'sector-energy', 'Consumer': 'sector-consumer', 'Telecom': 'sector-telecom',
+            'Automotive': 'sector-industrial', 'ETF': 'sector-etf', 'Industrial': 'sector-industrial',
+            'Utilities': 'sector-energy', 'Real Estate': 'sector-consumer', 'Conglomerate': 'sector-finance',
+            'Other': 'sector-other'
+        };
+
+        const SECTOR_ORDER = ['Technology', 'Financial', 'Healthcare', 'Energy', 'Consumer', 'Telecom', 'Automotive', 'Industrial', 'Utilities', 'Real Estate', 'Conglomerate', 'ETF', 'Other'];
+
+        let state = {
+            scriptUrl: DEFAULT_SCRIPT_URL,
+            sortBy: 'ticker',
+            quotes: [],
+            expandedRows: {}
+        };
+
+        function loadState() {
+            const saved = localStorage.getItem('portfolioStateV7');
+            if (saved) {
+                const p = JSON.parse(saved);
+                state.scriptUrl = p.scriptUrl || DEFAULT_SCRIPT_URL;
+                state.sortBy = p.sortBy || 'ticker';
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('portfolioStateV7', JSON.stringify({
+                scriptUrl: state.scriptUrl,
+                sortBy: state.sortBy
+            }));
+        }
+
+        async function fetchQuotes() {
+            const response = await fetch(state.scriptUrl);
+            if (!response.ok) throw new Error(`Script error: ${response.status}`);
+            const quotes = await response.json();
+            if (!Array.isArray(quotes)) throw new Error('Invalid response from script');
+            return quotes;
+        }
+
+        function formatNumber(num, decimals = 2) {
+            if (num == null) return '—';
+            return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        function formatGain(gain) {
+            if (gain == null) return '—';
+            const sign = gain >= 0 ? '+' : '';
+            return sign + '$' + formatNumber(gain, 0);
+        }
+
+        function getSector(ticker) {
+            return SECTOR_MAP[ticker] || 'Other';
+        }
+
+        function sortStocks(stocks) {
+            return stocks.sort((a, b) => {
+                switch (state.sortBy) {
+                    case 'changePercent': return (b.changePercent || 0) - (a.changePercent || 0);
+                    case 'price': return (b.price || 0) - (a.price || 0);
+                    case 'costBasis': return (b.costBasis || 0) - (a.costBasis || 0);
+                    default: return (a.symbol || '').localeCompare(b.symbol || '');
+                }
+            });
+        }
+
+        function groupBySector() {
+            const grouped = {};
+            state.quotes.forEach(quote => {
+                const sector = getSector(quote.symbol);
+                if (!grouped[sector]) grouped[sector] = [];
+                grouped[sector].push(quote);
+            });
+            Object.keys(grouped).forEach(s => grouped[s] = sortStocks(grouped[s]));
+            return grouped;
+        }
+
+        function renderStocks() {
+            const container = document.getElementById('stocksContainer');
+            const grouped = groupBySector();
+            
+            if (state.quotes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <div class="empty-state-text">No stocks loaded.<br>Check settings.</div>
+                    </div>`;
+                return;
+            }
+            
+            let html = '';
+            SECTOR_ORDER.forEach(sector => {
+                if (!grouped[sector]?.length) return;
+                html += `
+                    <div class="sector">
+                        <div class="sector-header">
+                            <div class="sector-icon ${SECTOR_CLASSES[sector]}">${SECTOR_ICONS[sector]}</div>
+                            <div class="sector-name">${sector}</div>
+                            <div class="sector-count">${grouped[sector].length}</div>
+                        </div>
+                        <div class="column-headers">
+                            <div class="col-header">Symbol</div>
+                            <div class="col-header">Price</div>
+                            <div class="col-header">Change</div>
+                            <div class="col-header">Cost Basis</div>
+                        </div>
+                        <div class="column-headers alt-headers">
+                            <div class="col-header">Symbol</div>
+                            <div class="col-header">P/E</div>
+                            <div class="col-header">Ex-Date</div>
+                            <div class="col-header">Yield</div>
+                            <div class="col-header">Gain</div>
+                        </div>
+                        <div class="stocks-grid">`;
+                
+                grouped[sector].forEach(q => {
+                    const cls = (q.changePercent || 0) > 0 ? 'positive' : (q.changePercent || 0) < 0 ? 'negative' : 'neutral';
+                    const sign = (q.changePercent || 0) > 0 ? '+' : '';
+                    const isExpanded = state.expandedRows[q.symbol] || false;
+                    const gainCls = (q.gain || 0) >= 0 ? 'positive' : 'negative';
+                    html += `
+                        <div class="stock-card ${isExpanded ? 'expanded' : ''}" data-symbol="${q.symbol}">
+                            <div class="stock-info">
+                                <div class="stock-ticker">${q.symbol}</div>
+                                <div class="stock-name">${q.name || '—'}</div>
+                            </div>
+                            <div class="stock-data default-view">
+                                <div class="stock-price">${q.price != null ? '$' + formatNumber(q.price) : '—'}</div>
+                                <div class="stock-change ${cls}">${q.changePercent != null ? sign + formatNumber(q.changePercent) + '%' : '—'}</div>
+                                <div class="stock-cost-basis">${q.costBasis ? '$' + formatNumber(q.costBasis, 0) : '—'}</div>
+                            </div>
+                            <div class="stock-data alt-view">
+                                <div class="stock-pe">${q.peRatio ? formatNumber(q.peRatio, 1) : '—'}</div>
+                                <div class="stock-ex-date">${q.exDate || '—'}</div>
+                                <div class="stock-yield">${q.distYield ? formatNumber(q.distYield, 2) + '%' : '—'}</div>
+                                <div class="stock-gain ${gainCls}">${formatGain(q.gain)}</div>
+                            </div>
+                        </div>`;
+                });
+                html += '</div></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function updateStatus(text, type = 'success') {
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            dot.className = 'status-dot' + (type === 'error' ? ' error' : type === 'warning' ? ' warning' : '');
+            statusText.textContent = text;
+        }
+
+        function updateTimestamp() {
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+
+        function showError(msg) {
+            const banner = document.getElementById('errorBanner');
+            if (msg) { banner.textContent = msg; banner.style.display = 'block'; }
+            else { banner.style.display = 'none'; }
+        }
+
+        async function refresh() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+            
+            refreshBtn.classList.add('spinning');
+            loadingOverlay.classList.remove('hidden');
+            showError(null);
+            
+            try {
+                loadingText.textContent = 'Fetching quotes...';
+                state.quotes = await fetchQuotes();
+                
+                if (state.quotes.length === 0) throw new Error('No quotes returned');
+                
+                const withPrices = state.quotes.filter(q => q.price != null).length;
+                updateStatus(`${state.quotes.length} stocks · ${withPrices} quotes`, 'success');
+                
+                renderStocks();
+                updateTimestamp();
+            } catch (error) {
+                console.error('Refresh error:', error);
+                updateStatus('Error', 'error');
+                showError(error.message);
+                renderStocks();
+            } finally {
+                refreshBtn.classList.remove('spinning');
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        async function testScript(url) {
+            const statusEl = document.getElementById('sheetUrlStatus');
+            const previewEl = document.getElementById('tickerPreview');
+            
+            if (!url?.trim()) {
+                statusEl.textContent = '';
+                previewEl.style.display = 'none';
+                return;
+            }
+            
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'sheet-status';
+            
+            try {
+                const response = await fetch(url.trim());
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const quotes = await response.json();
+                if (!Array.isArray(quotes)) throw new Error('Invalid response');
+                
+                const withPrices = quotes.filter(q => q.price != null).length;
+                
+                statusEl.textContent = `✓ ${quotes.length} stocks, ${withPrices} with quotes`;
+                statusEl.className = 'sheet-status success';
+                previewEl.textContent = quotes.slice(0, 10).map(q => q.symbol).join(', ') + (quotes.length > 10 ? '...' : '');
+                previewEl.style.display = 'block';
+            } catch (error) {
+                statusEl.textContent = `✗ ${error.message}`;
+                statusEl.className = 'sheet-status error';
+                previewEl.style.display = 'none';
+            }
+        }
+
+        function initSettingsModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const modal = document.getElementById('settingsModal');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const closeBtn = document.getElementById('modalClose');
+            const saveBtn = document.getElementById('saveSettings');
+            const urlInput = document.getElementById('sheetUrlInput');
+            
+            let testTimeout;
+            
+            function openModal() {
+                overlay.classList.add('active');
+                modal.classList.add('active');
+                urlInput.value = state.scriptUrl;
+                updateSettingsUI();
+                testScript(state.scriptUrl);
+            }
+            
+            function closeModal() {
+                overlay.classList.remove('active');
+                modal.classList.remove('active');
+            }
+            
+            settingsBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            overlay.addEventListener('click', closeModal);
+            
+            urlInput.addEventListener('input', () => {
+                clearTimeout(testTimeout);
+                testTimeout = setTimeout(() => testScript(urlInput.value), 500);
+            });
+            
+            document.getElementById('sortOptions').addEventListener('click', (e) => {
+                if (e.target.classList.contains('setting-option')) {
+                    document.querySelectorAll('#sortOptions .setting-option').forEach(o => o.classList.remove('active'));
+                    e.target.classList.add('active');
+                    state.sortBy = e.target.dataset.value;
+                }
+            });
+            
+            saveBtn.addEventListener('click', async () => {
+                state.scriptUrl = urlInput.value.trim();
+                saveState();
+                closeModal();
+                await refresh();
+            });
+        }
+
+        function updateSettingsUI() {
+            document.querySelectorAll('#sortOptions .setting-option').forEach(o => 
+                o.classList.toggle('active', o.dataset.value === state.sortBy));
+        }
+
+        async function init() {
+            loadState();
+            initSettingsModal();
+            document.getElementById('refreshBtn').addEventListener('click', refresh);
+            
+            document.getElementById('stocksContainer').addEventListener('click', (e) => {
+                const card = e.target.closest('.stock-card');
+                if (card) {
+                    const symbol = card.dataset.symbol;
+                    state.expandedRows[symbol] = !state.expandedRows[symbol];
+                    card.classList.toggle('expanded');
+                }
+            });
+            
+            await refresh();
+        }
+
+        init();
+    </script>
+</body>
+</html>
