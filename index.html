@@ -200,14 +200,6 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .column-headers.alt-headers {
-            top: 145px;
-            z-index: 39;
-            background: var(--bg-tertiary);
-            font-size: 9px;
-            color: var(--accent);
-        }
-
         .col-header {
             text-align: right;
             min-width: 60px;
@@ -216,23 +208,6 @@
         .col-header:first-child {
             text-align: left;
             min-width: auto;
-        }
-
-        .stock-pe, .stock-ex-date, .stock-yield, .stock-gain {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-align: right;
-            min-width: 60px;
-        }
-
-        .stock-gain.positive {
-            color: var(--green);
-        }
-
-        .stock-gain.negative {
-            color: var(--red);
         }
 
         .stock-card {
@@ -267,6 +242,7 @@
         .stock-data.alt-view {
             display: none;
             grid-template-columns: auto auto auto auto;
+            gap: 16px;
         }
 
         .stock-card.expanded .stock-data.default-view {
@@ -343,6 +319,37 @@
         .stock-change.neutral {
             color: var(--text-secondary);
             background: var(--bg-tertiary);
+        }
+
+        .alt-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .alt-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .alt-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .alt-value.positive {
+            color: var(--green);
+        }
+
+        .alt-value.negative {
+            color: var(--red);
         }
 
         /* Modal Styles */
@@ -836,199 +843,3 @@
                         <div class="column-headers">
                             <div class="col-header">Symbol</div>
                             <div class="col-header">Price</div>
-                            <div class="col-header">Change</div>
-                            <div class="col-header">Cost Basis</div>
-                        </div>
-                        <div class="column-headers alt-headers">
-                            <div class="col-header">Symbol</div>
-                            <div class="col-header">P/E</div>
-                            <div class="col-header">Ex-Date</div>
-                            <div class="col-header">Yield</div>
-                            <div class="col-header">Gain</div>
-                        </div>
-                        <div class="stocks-grid">`;
-                
-                grouped[sector].forEach(q => {
-                    const cls = (q.changePercent || 0) > 0 ? 'positive' : (q.changePercent || 0) < 0 ? 'negative' : 'neutral';
-                    const sign = (q.changePercent || 0) > 0 ? '+' : '';
-                    const isExpanded = state.expandedRows[q.symbol] || false;
-                    const gainCls = (q.gain || 0) >= 0 ? 'positive' : 'negative';
-                    html += `
-                        <div class="stock-card ${isExpanded ? 'expanded' : ''}" data-symbol="${q.symbol}">
-                            <div class="stock-info">
-                                <div class="stock-ticker">${q.symbol}</div>
-                                <div class="stock-name">${q.name || '—'}</div>
-                            </div>
-                            <div class="stock-data default-view">
-                                <div class="stock-price">${q.price != null ? '$' + formatNumber(q.price) : '—'}</div>
-                                <div class="stock-change ${cls}">${q.changePercent != null ? sign + formatNumber(q.changePercent) + '%' : '—'}</div>
-                                <div class="stock-cost-basis">${q.costBasis ? '$' + formatNumber(q.costBasis, 0) : '—'}</div>
-                            </div>
-                            <div class="stock-data alt-view">
-                                <div class="stock-pe">${q.peRatio ? formatNumber(q.peRatio, 1) : '—'}</div>
-                                <div class="stock-ex-date">${q.exDate || '—'}</div>
-                                <div class="stock-yield">${q.distYield ? formatNumber(q.distYield, 2) + '%' : '—'}</div>
-                                <div class="stock-gain ${gainCls}">${formatGain(q.gain)}</div>
-                            </div>
-                        </div>`;
-                });
-                html += '</div></div>';
-            });
-            container.innerHTML = html;
-        }
-
-        function updateStatus(text, type = 'success') {
-            const dot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            dot.className = 'status-dot' + (type === 'error' ? ' error' : type === 'warning' ? ' warning' : '');
-            statusText.textContent = text;
-        }
-
-        function updateTimestamp() {
-            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-        }
-
-        function showError(msg) {
-            const banner = document.getElementById('errorBanner');
-            if (msg) { banner.textContent = msg; banner.style.display = 'block'; }
-            else { banner.style.display = 'none'; }
-        }
-
-        async function refresh() {
-            const refreshBtn = document.getElementById('refreshBtn');
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const loadingText = document.getElementById('loadingText');
-            
-            refreshBtn.classList.add('spinning');
-            loadingOverlay.classList.remove('hidden');
-            showError(null);
-            
-            try {
-                loadingText.textContent = 'Fetching quotes...';
-                state.quotes = await fetchQuotes();
-                
-                if (state.quotes.length === 0) throw new Error('No quotes returned');
-                
-                const withPrices = state.quotes.filter(q => q.price != null).length;
-                updateStatus(`${state.quotes.length} stocks · ${withPrices} quotes`, 'success');
-                
-                renderStocks();
-                updateTimestamp();
-            } catch (error) {
-                console.error('Refresh error:', error);
-                updateStatus('Error', 'error');
-                showError(error.message);
-                renderStocks();
-            } finally {
-                refreshBtn.classList.remove('spinning');
-                loadingOverlay.classList.add('hidden');
-            }
-        }
-
-        async function testScript(url) {
-            const statusEl = document.getElementById('sheetUrlStatus');
-            const previewEl = document.getElementById('tickerPreview');
-            
-            if (!url?.trim()) {
-                statusEl.textContent = '';
-                previewEl.style.display = 'none';
-                return;
-            }
-            
-            statusEl.textContent = 'Testing...';
-            statusEl.className = 'sheet-status';
-            
-            try {
-                const response = await fetch(url.trim());
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const quotes = await response.json();
-                if (!Array.isArray(quotes)) throw new Error('Invalid response');
-                
-                const withPrices = quotes.filter(q => q.price != null).length;
-                
-                statusEl.textContent = `✓ ${quotes.length} stocks, ${withPrices} with quotes`;
-                statusEl.className = 'sheet-status success';
-                previewEl.textContent = quotes.slice(0, 10).map(q => q.symbol).join(', ') + (quotes.length > 10 ? '...' : '');
-                previewEl.style.display = 'block';
-            } catch (error) {
-                statusEl.textContent = `✗ ${error.message}`;
-                statusEl.className = 'sheet-status error';
-                previewEl.style.display = 'none';
-            }
-        }
-
-        function initSettingsModal() {
-            const overlay = document.getElementById('modalOverlay');
-            const modal = document.getElementById('settingsModal');
-            const settingsBtn = document.getElementById('settingsBtn');
-            const closeBtn = document.getElementById('modalClose');
-            const saveBtn = document.getElementById('saveSettings');
-            const urlInput = document.getElementById('sheetUrlInput');
-            
-            let testTimeout;
-            
-            function openModal() {
-                overlay.classList.add('active');
-                modal.classList.add('active');
-                urlInput.value = state.scriptUrl;
-                updateSettingsUI();
-                testScript(state.scriptUrl);
-            }
-            
-            function closeModal() {
-                overlay.classList.remove('active');
-                modal.classList.remove('active');
-            }
-            
-            settingsBtn.addEventListener('click', openModal);
-            closeBtn.addEventListener('click', closeModal);
-            overlay.addEventListener('click', closeModal);
-            
-            urlInput.addEventListener('input', () => {
-                clearTimeout(testTimeout);
-                testTimeout = setTimeout(() => testScript(urlInput.value), 500);
-            });
-            
-            document.getElementById('sortOptions').addEventListener('click', (e) => {
-                if (e.target.classList.contains('setting-option')) {
-                    document.querySelectorAll('#sortOptions .setting-option').forEach(o => o.classList.remove('active'));
-                    e.target.classList.add('active');
-                    state.sortBy = e.target.dataset.value;
-                }
-            });
-            
-            saveBtn.addEventListener('click', async () => {
-                state.scriptUrl = urlInput.value.trim();
-                saveState();
-                closeModal();
-                await refresh();
-            });
-        }
-
-        function updateSettingsUI() {
-            document.querySelectorAll('#sortOptions .setting-option').forEach(o => 
-                o.classList.toggle('active', o.dataset.value === state.sortBy));
-        }
-
-        async function init() {
-            loadState();
-            initSettingsModal();
-            document.getElementById('refreshBtn').addEventListener('click', refresh);
-            
-            document.getElementById('stocksContainer').addEventListener('click', (e) => {
-                const card = e.target.closest('.stock-card');
-                if (card) {
-                    const symbol = card.dataset.symbol;
-                    state.expandedRows[symbol] = !state.expandedRows[symbol];
-                    card.classList.toggle('expanded');
-                }
-            });
-            
-            await refresh();
-        }
-
-        init();
-    </script>
-</body>
-</html>
