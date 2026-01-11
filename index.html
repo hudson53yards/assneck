@@ -134,6 +134,10 @@
             background: var(--warning);
         }
 
+        .status-dot.cached {
+            background: var(--accent);
+        }
+
         .sector {
             margin-bottom: 24px;
         }
@@ -616,7 +620,7 @@
     </style>
 </head>
 <body>
-    <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-overlay hidden" id="loadingOverlay">
         <div class="loading-spinner"></div>
         <div class="loading-text" id="loadingText">Loading...</div>
     </div>
@@ -686,6 +690,8 @@
 
     <script>
         const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuw8GBowkDeDjXiAMlapHK9bl9429hlTYOdBU2sI0C-hlKsfsgzhkt-elytlzjBe0JbQ/exec';
+        const CACHE_KEY = 'portfolioCache';
+        const CACHE_MAX_AGE = 15 * 60 * 1000; // 15 minutes
 
         const SECTOR_MAP = {
             'AAPL': 'Technology', 'MSFT': 'Technology', 'NVDA': 'Technology', 'QCOM': 'Technology',
@@ -755,8 +761,58 @@
             expandedRows: {}
         };
 
+        // Check if US market is open (9:30 AM - 4:00 PM ET, Mon-Fri)
+        function isMarketOpen() {
+            const now = new Date();
+            const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const day = et.getDay();
+            const hour = et.getHours();
+            const minute = et.getMinutes();
+            const time = hour * 60 + minute;
+            
+            // Weekend
+            if (day === 0 || day === 6) return false;
+            
+            // Before 9:30 AM or after 4:00 PM ET
+            if (time < 570 || time >= 960) return false;
+            
+            return true;
+        }
+
+        // Check if cache is fresh enough
+        function isCacheFresh(cacheTime) {
+            const age = Date.now() - cacheTime;
+            
+            // If market is closed, cache is good for 4 hours
+            if (!isMarketOpen()) {
+                return age < 4 * 60 * 60 * 1000;
+            }
+            
+            // If market is open, cache is good for 15 minutes
+            return age < CACHE_MAX_AGE;
+        }
+
+        function loadCache() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    return JSON.parse(cached);
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveCache(quotes) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    quotes: quotes,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {}
+        }
+
         function loadState() {
-            const saved = localStorage.getItem('portfolioStateV7');
+            const saved = localStorage.getItem('portfolioStateV8');
             if (saved) {
                 const p = JSON.parse(saved);
                 state.scriptUrl = p.scriptUrl || DEFAULT_SCRIPT_URL;
@@ -765,7 +821,7 @@
         }
 
         function saveState() {
-            localStorage.setItem('portfolioStateV7', JSON.stringify({
+            localStorage.setItem('portfolioStateV8', JSON.stringify({
                 scriptUrl: state.scriptUrl,
                 sortBy: state.sortBy
             }));
@@ -788,6 +844,10 @@
             if (gain == null) return '—';
             const sign = gain >= 0 ? '+' : '';
             return sign + '$' + formatNumber(gain, 0);
+        }
+
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
         }
 
         function getSector(ticker) {
@@ -891,12 +951,12 @@
         function updateStatus(text, type = 'success') {
             const dot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
-            dot.className = 'status-dot' + (type === 'error' ? ' error' : type === 'warning' ? ' warning' : '');
+            dot.className = 'status-dot' + (type === 'error' ? ' error' : type === 'warning' ? ' warning' : type === 'cached' ? ' cached' : '');
             statusText.textContent = text;
         }
 
-        function updateTimestamp() {
-            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        function updateTimestamp(timestamp) {
+            document.getElementById('lastUpdated').textContent = formatTime(timestamp || Date.now());
         }
 
         function showError(msg) {
@@ -905,31 +965,68 @@
             else { banner.style.display = 'none'; }
         }
 
-        async function refresh() {
+        async function refresh(forceRefresh = false) {
             const refreshBtn = document.getElementById('refreshBtn');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const loadingText = document.getElementById('loadingText');
             
-            refreshBtn.classList.add('spinning');
-            loadingOverlay.classList.remove('hidden');
             showError(null);
             
-            try {
+            // Check cache first (unless force refresh)
+            if (!forceRefresh) {
+                const cache = loadCache();
+                if (cache && cache.quotes && cache.quotes.length > 0) {
+                    // Show cached data immediately
+                    state.quotes = cache.quotes;
+                    renderStocks();
+                    updateTimestamp(cache.timestamp);
+                    
+                    // If cache is fresh, we're done
+                    if (isCacheFresh(cache.timestamp)) {
+                        const withPrices = state.quotes.filter(q => q.price != null).length;
+                        const marketStatus = isMarketOpen() ? '' : ' · Market Closed';
+                        updateStatus(`${state.quotes.length} stocks · Cached${marketStatus}`, 'cached');
+                        return;
+                    }
+                    
+                    // Cache is stale, update in background
+                    updateStatus(`${state.quotes.length} stocks · Updating...`, 'warning');
+                }
+            }
+            
+            // Show spinner only if no cached data
+            if (state.quotes.length === 0) {
+                loadingOverlay.classList.remove('hidden');
                 loadingText.textContent = 'Fetching quotes...';
-                state.quotes = await fetchQuotes();
+            }
+            
+            refreshBtn.classList.add('spinning');
+            
+            try {
+                const quotes = await fetchQuotes();
                 
-                if (state.quotes.length === 0) throw new Error('No quotes returned');
+                if (quotes.length === 0) throw new Error('No quotes returned');
+                
+                state.quotes = quotes;
+                saveCache(quotes);
                 
                 const withPrices = state.quotes.filter(q => q.price != null).length;
-                updateStatus(`${state.quotes.length} stocks · ${withPrices} quotes`, 'success');
+                const marketStatus = isMarketOpen() ? '' : ' · Market Closed';
+                updateStatus(`${state.quotes.length} stocks · ${withPrices} quotes${marketStatus}`, 'success');
                 
                 renderStocks();
-                updateTimestamp();
+                updateTimestamp(Date.now());
             } catch (error) {
                 console.error('Refresh error:', error);
-                updateStatus('Error', 'error');
-                showError(error.message);
-                renderStocks();
+                
+                // If we have cached data, show it with error status
+                if (state.quotes.length > 0) {
+                    updateStatus('Update failed · Using cache', 'warning');
+                } else {
+                    updateStatus('Error', 'error');
+                    showError(error.message);
+                    renderStocks();
+                }
             } finally {
                 refreshBtn.classList.remove('spinning');
                 loadingOverlay.classList.add('hidden');
@@ -1013,7 +1110,7 @@
                 state.scriptUrl = urlInput.value.trim();
                 saveState();
                 closeModal();
-                await refresh();
+                await refresh(true); // Force refresh when settings change
             });
         }
 
@@ -1025,7 +1122,7 @@
         async function init() {
             loadState();
             initSettingsModal();
-            document.getElementById('refreshBtn').addEventListener('click', refresh);
+            document.getElementById('refreshBtn').addEventListener('click', () => refresh(true));
             
             document.getElementById('stocksContainer').addEventListener('click', (e) => {
                 const card = e.target.closest('.stock-card');
@@ -1036,7 +1133,7 @@
                 }
             });
             
-            await refresh();
+            await refresh(); // Will use cache if available
         }
 
         init();
