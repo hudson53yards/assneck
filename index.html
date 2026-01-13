@@ -143,85 +143,83 @@
         .stocks-view { display: block; }
         .stocks-view.hidden { display: none; }
 
-        .summary-card {
+        /* Summary Table Styles */
+        .summary-table {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
+            overflow: hidden;
         }
 
-        .summary-card.grand-total {
-            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-tertiary) 100%);
-            border-color: var(--accent);
-        }
-
-        .summary-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .summary-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .summary-icon.retirement { background: var(--green-bg); }
-        .summary-icon.taxable { background: var(--purple-bg); }
-        .summary-icon.total { background: var(--accent-bg); }
-
-        .summary-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .summary-subtitle {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .summary-stats {
+        .summary-row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            grid-template-columns: 1fr auto auto;
+            gap: 16px;
+            padding: 18px 20px;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
         }
 
-        .summary-stat {
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-row.header {
             background: var(--bg-tertiary);
-            border-radius: 10px;
-            padding: 14px;
+            padding: 12px 20px;
         }
 
-        .stat-label {
+        .summary-row.total {
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
+            border-top: 2px solid var(--accent);
+        }
+
+        .summary-label {
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
         }
 
-        .stat-value {
-            font-family: 'JetBrains Mono', monospace;
+        .summary-account {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .summary-account-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 18px;
+        }
+
+        .summary-account-icon.retirement { background: var(--green-bg); }
+        .summary-account-icon.taxable { background: var(--purple-bg); }
+        .summary-account-icon.total { background: var(--accent-bg); }
+
+        .summary-account-name {
+            font-size: 16px;
             font-weight: 600;
             color: var(--text-primary);
         }
 
-        .stat-value.positive { color: var(--green); }
-        .stat-value.negative { color: var(--red); }
-        .stat-value.small { font-size: 15px; }
-        .summary-stat.full-width { grid-column: 1 / -1; }
+        .summary-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: right;
+            min-width: 100px;
+        }
+
+        .summary-value.positive { color: var(--green); }
+        .summary-value.negative { color: var(--red); }
 
         .sector { margin-bottom: 24px; }
 
@@ -752,7 +750,6 @@
         const CACHE_KEY = 'portfolioCache';
         const CACHE_MAX_AGE = 15 * 60 * 1000;
 
-        // Sector icons and colors - maps sector names from your sheet
         const SECTOR_CONFIG = {
             'Technology': { icon: '💻', class: 'sector-tech' },
             'Tech': { icon: '💻', class: 'sector-tech' },
@@ -791,9 +788,7 @@
 
         function getSectorConfig(sector) {
             if (!sector) return DEFAULT_SECTOR;
-            // Try exact match first
             if (SECTOR_CONFIG[sector]) return SECTOR_CONFIG[sector];
-            // Try case-insensitive match
             const key = Object.keys(SECTOR_CONFIG).find(k => k.toLowerCase() === sector.toLowerCase());
             return key ? SECTOR_CONFIG[key] : DEFAULT_SECTOR;
         }
@@ -834,7 +829,7 @@
         }
 
         function loadState() {
-            const saved = localStorage.getItem('portfolioStateV10');
+            const saved = localStorage.getItem('portfolioStateV11');
             if (saved) {
                 const p = JSON.parse(saved);
                 state.scriptUrl = p.scriptUrl || DEFAULT_SCRIPT_URL;
@@ -843,7 +838,7 @@
         }
 
         function saveState() {
-            localStorage.setItem('portfolioStateV10', JSON.stringify({
+            localStorage.setItem('portfolioStateV11', JSON.stringify({
                 scriptUrl: state.scriptUrl,
                 sortBy: state.sortBy
             }));
@@ -895,13 +890,11 @@
                 if (!grouped[sector]) grouped[sector] = [];
                 grouped[sector].push(quote);
             });
-            // Sort stocks within each sector
             Object.keys(grouped).forEach(s => grouped[s] = sortStocks(grouped[s]));
             return grouped;
         }
 
         function getSortedSectors(grouped) {
-            // Sort sectors alphabetically, but put "Other" at the end
             return Object.keys(grouped).sort((a, b) => {
                 if (a === 'Other') return 1;
                 if (b === 'Other') return -1;
@@ -911,9 +904,9 @@
 
         function calculateSummary() {
             const summary = {
-                retirement: { marketValue: 0, costBasis: 0, gain: 0, count: 0 },
-                taxable: { marketValue: 0, costBasis: 0, gain: 0, count: 0 },
-                total: { marketValue: 0, costBasis: 0, gain: 0, count: 0 }
+                retirement: { marketValue: 0, gain: 0 },
+                taxable: { marketValue: 0, gain: 0 },
+                total: { marketValue: 0, gain: 0 }
             };
 
             state.quotes.forEach(q => {
@@ -922,15 +915,11 @@
                 const key = isRetirement ? 'retirement' : 'taxable';
 
                 summary[key].marketValue += (q.marketValue || 0);
-                summary[key].costBasis += (q.costBasis || 0);
                 summary[key].gain += (q.gain || 0);
-                summary[key].count++;
             });
 
             summary.total.marketValue = summary.retirement.marketValue + summary.taxable.marketValue;
-            summary.total.costBasis = summary.retirement.costBasis + summary.taxable.costBasis;
             summary.total.gain = summary.retirement.gain + summary.taxable.gain;
-            summary.total.count = summary.retirement.count + summary.taxable.count;
 
             return summary;
         }
@@ -939,86 +928,36 @@
             const container = document.getElementById('summaryView');
             const summary = calculateSummary();
 
-            const retGainPct = summary.retirement.costBasis > 0 ? (summary.retirement.gain / summary.retirement.costBasis * 100) : 0;
-            const taxGainPct = summary.taxable.costBasis > 0 ? (summary.taxable.gain / summary.taxable.costBasis * 100) : 0;
-            const totalGainPct = summary.total.costBasis > 0 ? (summary.total.gain / summary.total.costBasis * 100) : 0;
-
             container.innerHTML = `
-                <div class="summary-card">
-                    <div class="summary-header">
-                        <div class="summary-icon retirement">🏦</div>
-                        <div>
-                            <div class="summary-title">Retirement</div>
-                            <div class="summary-subtitle">${summary.retirement.count} positions</div>
-                        </div>
+                <div class="summary-table">
+                    <div class="summary-row header">
+                        <div class="summary-label">Account Type</div>
+                        <div class="summary-label">Current Value</div>
+                        <div class="summary-label">Gain</div>
                     </div>
-                    <div class="summary-stats">
-                        <div class="summary-stat">
-                            <div class="stat-label">Cost Basis</div>
-                            <div class="stat-value small">${formatCurrency(summary.retirement.costBasis)}</div>
+                    <div class="summary-row">
+                        <div class="summary-account">
+                            <div class="summary-account-icon retirement">🏦</div>
+                            <div class="summary-account-name">Retirement</div>
                         </div>
-                        <div class="summary-stat">
-                            <div class="stat-label">Current Value</div>
-                            <div class="stat-value small">${formatCurrency(summary.retirement.marketValue)}</div>
-                        </div>
-                        <div class="summary-stat full-width">
-                            <div class="stat-label">Total Gain</div>
-                            <div class="stat-value ${summary.retirement.gain >= 0 ? 'positive' : 'negative'}">
-                                ${formatGain(summary.retirement.gain)} (${retGainPct >= 0 ? '+' : ''}${formatNumber(retGainPct, 1)}%)
-                            </div>
-                        </div>
+                        <div class="summary-value">${formatCurrency(summary.retirement.marketValue)}</div>
+                        <div class="summary-value ${summary.retirement.gain >= 0 ? 'positive' : 'negative'}">${formatGain(summary.retirement.gain)}</div>
                     </div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="summary-header">
-                        <div class="summary-icon taxable">💼</div>
-                        <div>
-                            <div class="summary-title">Taxable</div>
-                            <div class="summary-subtitle">${summary.taxable.count} positions</div>
+                    <div class="summary-row">
+                        <div class="summary-account">
+                            <div class="summary-account-icon taxable">💼</div>
+                            <div class="summary-account-name">Taxable</div>
                         </div>
+                        <div class="summary-value">${formatCurrency(summary.taxable.marketValue)}</div>
+                        <div class="summary-value ${summary.taxable.gain >= 0 ? 'positive' : 'negative'}">${formatGain(summary.taxable.gain)}</div>
                     </div>
-                    <div class="summary-stats">
-                        <div class="summary-stat">
-                            <div class="stat-label">Cost Basis</div>
-                            <div class="stat-value small">${formatCurrency(summary.taxable.costBasis)}</div>
+                    <div class="summary-row total">
+                        <div class="summary-account">
+                            <div class="summary-account-icon total">📊</div>
+                            <div class="summary-account-name">Total</div>
                         </div>
-                        <div class="summary-stat">
-                            <div class="stat-label">Current Value</div>
-                            <div class="stat-value small">${formatCurrency(summary.taxable.marketValue)}</div>
-                        </div>
-                        <div class="summary-stat full-width">
-                            <div class="stat-label">Total Gain</div>
-                            <div class="stat-value ${summary.taxable.gain >= 0 ? 'positive' : 'negative'}">
-                                ${formatGain(summary.taxable.gain)} (${taxGainPct >= 0 ? '+' : ''}${formatNumber(taxGainPct, 1)}%)
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="summary-card grand-total">
-                    <div class="summary-header">
-                        <div class="summary-icon total">📊</div>
-                        <div>
-                            <div class="summary-title">Grand Total</div>
-                            <div class="summary-subtitle">${summary.total.count} positions</div>
-                        </div>
-                    </div>
-                    <div class="summary-stats">
-                        <div class="summary-stat">
-                            <div class="stat-label">Cost Basis</div>
-                            <div class="stat-value small">${formatCurrency(summary.total.costBasis)}</div>
-                        </div>
-                        <div class="summary-stat">
-                            <div class="stat-label">Current Value</div>
-                            <div class="stat-value small">${formatCurrency(summary.total.marketValue)}</div>
-                        </div>
-                        <div class="summary-stat full-width">
-                            <div class="stat-label">Total Gain</div>
-                            <div class="stat-value ${summary.total.gain >= 0 ? 'positive' : 'negative'}">
-                                ${formatGain(summary.total.gain)} (${totalGainPct >= 0 ? '+' : ''}${formatNumber(totalGainPct, 1)}%)
-                            </div>
-                        </div>
+                        <div class="summary-value">${formatCurrency(summary.total.marketValue)}</div>
+                        <div class="summary-value ${summary.total.gain >= 0 ? 'positive' : 'negative'}">${formatGain(summary.total.gain)}</div>
                     </div>
                 </div>
             `;
