@@ -143,7 +143,6 @@
         .stocks-view { display: block; }
         .stocks-view.hidden { display: none; }
 
-        /* Summary Table Styles */
         .summary-table {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -914,8 +913,14 @@
                 const isRetirement = type.includes('retire') || type.includes('ira') || type.includes('401');
                 const key = isRetirement ? 'retirement' : 'taxable';
 
-                summary[key].marketValue += (q.marketValue || 0);
-                summary[key].gain += (q.gain || 0);
+                // Calculate current value: price * quantity
+                const currentValue = (q.price || 0) * (q.quantity || 0);
+                
+                // Calculate gain: currentValue - costBasis
+                const gain = currentValue - (q.costBasis || 0);
+
+                summary[key].marketValue += currentValue;
+                summary[key].gain += gain;
             });
 
             summary.total.marketValue = summary.retirement.marketValue + summary.taxable.marketValue;
