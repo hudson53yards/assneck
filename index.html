@@ -27,6 +27,8 @@
             --accent: #3b82f6;
             --accent-bg: rgba(59, 130, 246, 0.1);
             --warning: #f59e0b;
+            --purple: #a855f7;
+            --purple-bg: rgba(168, 85, 247, 0.1);
         }
 
         * {
@@ -98,6 +100,12 @@
             color: var(--text-primary);
         }
 
+        .icon-btn.active {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
         .icon-btn.spinning svg {
             animation: spin 1s linear infinite;
         }
@@ -136,6 +144,118 @@
 
         .status-dot.cached {
             background: var(--accent);
+        }
+
+        /* Summary View Styles */
+        .summary-view {
+            display: none;
+        }
+
+        .summary-view.active {
+            display: block;
+        }
+
+        .stocks-view {
+            display: block;
+        }
+
+        .stocks-view.hidden {
+            display: none;
+        }
+
+        .summary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .summary-card.grand-total {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-tertiary) 100%);
+            border-color: var(--accent);
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .summary-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .summary-icon.retirement {
+            background: var(--green-bg);
+        }
+
+        .summary-icon.taxable {
+            background: var(--purple-bg);
+        }
+
+        .summary-icon.total {
+            background: var(--accent-bg);
+        }
+
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .summary-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .summary-stat {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stat-value.positive {
+            color: var(--green);
+        }
+
+        .stat-value.negative {
+            color: var(--red);
+        }
+
+        .summary-stat.full-width {
+            grid-column: 1 / -1;
         }
 
         .sector {
@@ -629,6 +749,14 @@
         <header>
             <div class="logo">PORTFOLIO</div>
             <div class="header-actions">
+                <button class="icon-btn" id="summaryBtn" title="Summary View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                </button>
                 <button class="icon-btn" id="refreshBtn" title="Refresh">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
@@ -654,7 +782,11 @@
 
         <div id="errorBanner" class="error-banner" style="display: none;"></div>
 
-        <main id="stocksContainer"></main>
+        <!-- Summary View -->
+        <div class="summary-view" id="summaryView"></div>
+
+        <!-- Stocks View -->
+        <main id="stocksContainer" class="stocks-view"></main>
     </div>
 
     <!-- Settings Modal -->
@@ -691,7 +823,7 @@
     <script>
         const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuw8GBowkDeDjXiAMlapHK9bl9429hlTYOdBU2sI0C-hlKsfsgzhkt-elytlzjBe0JbQ/exec';
         const CACHE_KEY = 'portfolioCache';
-        const CACHE_MAX_AGE = 15 * 60 * 1000; // 15 minutes
+        const CACHE_MAX_AGE = 15 * 60 * 1000;
 
         const SECTOR_MAP = {
             'AAPL': 'Technology', 'MSFT': 'Technology', 'NVDA': 'Technology', 'QCOM': 'Technology',
@@ -758,10 +890,10 @@
             scriptUrl: DEFAULT_SCRIPT_URL,
             sortBy: 'ticker',
             quotes: [],
-            expandedRows: {}
+            expandedRows: {},
+            showSummary: false
         };
 
-        // Check if US market is open (9:30 AM - 4:00 PM ET, Mon-Fri)
         function isMarketOpen() {
             const now = new Date();
             const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
@@ -769,35 +901,23 @@
             const hour = et.getHours();
             const minute = et.getMinutes();
             const time = hour * 60 + minute;
-            
-            // Weekend
             if (day === 0 || day === 6) return false;
-            
-            // Before 9:30 AM or after 4:00 PM ET
             if (time < 570 || time >= 960) return false;
-            
             return true;
         }
 
-        // Check if cache is fresh enough
         function isCacheFresh(cacheTime) {
             const age = Date.now() - cacheTime;
-            
-            // If market is closed, cache is good for 4 hours
             if (!isMarketOpen()) {
                 return age < 4 * 60 * 60 * 1000;
             }
-            
-            // If market is open, cache is good for 15 minutes
             return age < CACHE_MAX_AGE;
         }
 
         function loadCache() {
             try {
                 const cached = localStorage.getItem(CACHE_KEY);
-                if (cached) {
-                    return JSON.parse(cached);
-                }
+                if (cached) return JSON.parse(cached);
             } catch (e) {}
             return null;
         }
@@ -812,7 +932,7 @@
         }
 
         function loadState() {
-            const saved = localStorage.getItem('portfolioStateV8');
+            const saved = localStorage.getItem('portfolioStateV9');
             if (saved) {
                 const p = JSON.parse(saved);
                 state.scriptUrl = p.scriptUrl || DEFAULT_SCRIPT_URL;
@@ -821,7 +941,7 @@
         }
 
         function saveState() {
-            localStorage.setItem('portfolioStateV8', JSON.stringify({
+            localStorage.setItem('portfolioStateV9', JSON.stringify({
                 scriptUrl: state.scriptUrl,
                 sortBy: state.sortBy
             }));
@@ -838,6 +958,11 @@
         function formatNumber(num, decimals = 2) {
             if (num == null) return '—';
             return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        function formatCurrency(num, decimals = 0) {
+            if (num == null) return '—';
+            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         }
 
         function formatGain(gain) {
@@ -874,6 +999,121 @@
             });
             Object.keys(grouped).forEach(s => grouped[s] = sortStocks(grouped[s]));
             return grouped;
+        }
+
+        function calculateSummary() {
+            const summary = {
+                retirement: { marketValue: 0, costBasis: 0, gain: 0, count: 0 },
+                taxable: { marketValue: 0, costBasis: 0, gain: 0, count: 0 },
+                total: { marketValue: 0, costBasis: 0, gain: 0, count: 0 }
+            };
+
+            state.quotes.forEach(q => {
+                const type = (q.accountType || '').toLowerCase();
+                const isRetirement = type.includes('retire') || type.includes('ira') || type.includes('401');
+                const key = isRetirement ? 'retirement' : 'taxable';
+
+                summary[key].marketValue += (q.marketValue || 0);
+                summary[key].costBasis += (q.costBasis || 0);
+                summary[key].gain += (q.gain || 0);
+                summary[key].count++;
+            });
+
+            summary.total.marketValue = summary.retirement.marketValue + summary.taxable.marketValue;
+            summary.total.costBasis = summary.retirement.costBasis + summary.taxable.costBasis;
+            summary.total.gain = summary.retirement.gain + summary.taxable.gain;
+            summary.total.count = summary.retirement.count + summary.taxable.count;
+
+            return summary;
+        }
+
+        function renderSummary() {
+            const container = document.getElementById('summaryView');
+            const summary = calculateSummary();
+
+            const retGainPct = summary.retirement.costBasis > 0 ? (summary.retirement.gain / summary.retirement.costBasis * 100) : 0;
+            const taxGainPct = summary.taxable.costBasis > 0 ? (summary.taxable.gain / summary.taxable.costBasis * 100) : 0;
+            const totalGainPct = summary.total.costBasis > 0 ? (summary.total.gain / summary.total.costBasis * 100) : 0;
+
+            container.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <div class="summary-icon retirement">🏦</div>
+                        <div>
+                            <div class="summary-title">Retirement</div>
+                            <div class="summary-subtitle">${summary.retirement.count} positions</div>
+                        </div>
+                    </div>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <div class="stat-label">Market Value</div>
+                            <div class="stat-value">${formatCurrency(summary.retirement.marketValue)}</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="stat-label">Cost Basis</div>
+                            <div class="stat-value">${formatCurrency(summary.retirement.costBasis)}</div>
+                        </div>
+                        <div class="summary-stat full-width">
+                            <div class="stat-label">Total Gain</div>
+                            <div class="stat-value ${summary.retirement.gain >= 0 ? 'positive' : 'negative'}">
+                                ${formatGain(summary.retirement.gain)} (${retGainPct >= 0 ? '+' : ''}${formatNumber(retGainPct, 1)}%)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <div class="summary-icon taxable">💼</div>
+                        <div>
+                            <div class="summary-title">Taxable</div>
+                            <div class="summary-subtitle">${summary.taxable.count} positions</div>
+                        </div>
+                    </div>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <div class="stat-label">Market Value</div>
+                            <div class="stat-value">${formatCurrency(summary.taxable.marketValue)}</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="stat-label">Cost Basis</div>
+                            <div class="stat-value">${formatCurrency(summary.taxable.costBasis)}</div>
+                        </div>
+                        <div class="summary-stat full-width">
+                            <div class="stat-label">Total Gain</div>
+                            <div class="stat-value ${summary.taxable.gain >= 0 ? 'positive' : 'negative'}">
+                                ${formatGain(summary.taxable.gain)} (${taxGainPct >= 0 ? '+' : ''}${formatNumber(taxGainPct, 1)}%)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-card grand-total">
+                    <div class="summary-header">
+                        <div class="summary-icon total">📊</div>
+                        <div>
+                            <div class="summary-title">Grand Total</div>
+                            <div class="summary-subtitle">${summary.total.count} positions</div>
+                        </div>
+                    </div>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <div class="stat-label">Market Value</div>
+                            <div class="stat-value">${formatCurrency(summary.total.marketValue)}</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="stat-label">Cost Basis</div>
+                            <div class="stat-value">${formatCurrency(summary.total.costBasis)}</div>
+                        </div>
+                        <div class="summary-stat full-width">
+                            <div class="stat-label">Total Gain</div>
+                            <div class="stat-value ${summary.total.gain >= 0 ? 'positive' : 'negative'}">
+                                ${formatGain(summary.total.gain)} (${totalGainPct >= 0 ? '+' : ''}${formatNumber(totalGainPct, 1)}%)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         function renderStocks() {
@@ -948,6 +1188,24 @@
             container.innerHTML = html;
         }
 
+        function toggleView() {
+            state.showSummary = !state.showSummary;
+            const summaryView = document.getElementById('summaryView');
+            const stocksView = document.getElementById('stocksContainer');
+            const summaryBtn = document.getElementById('summaryBtn');
+
+            if (state.showSummary) {
+                renderSummary();
+                summaryView.classList.add('active');
+                stocksView.classList.add('hidden');
+                summaryBtn.classList.add('active');
+            } else {
+                summaryView.classList.remove('active');
+                stocksView.classList.remove('hidden');
+                summaryBtn.classList.remove('active');
+            }
+        }
+
         function updateStatus(text, type = 'success') {
             const dot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
@@ -972,16 +1230,14 @@
             
             showError(null);
             
-            // Check cache first (unless force refresh)
             if (!forceRefresh) {
                 const cache = loadCache();
                 if (cache && cache.quotes && cache.quotes.length > 0) {
-                    // Show cached data immediately
                     state.quotes = cache.quotes;
                     renderStocks();
+                    if (state.showSummary) renderSummary();
                     updateTimestamp(cache.timestamp);
                     
-                    // If cache is fresh, we're done
                     if (isCacheFresh(cache.timestamp)) {
                         const withPrices = state.quotes.filter(q => q.price != null).length;
                         const marketStatus = isMarketOpen() ? '' : ' · Market Closed';
@@ -989,12 +1245,10 @@
                         return;
                     }
                     
-                    // Cache is stale, update in background
                     updateStatus(`${state.quotes.length} stocks · Updating...`, 'warning');
                 }
             }
             
-            // Show spinner only if no cached data
             if (state.quotes.length === 0) {
                 loadingOverlay.classList.remove('hidden');
                 loadingText.textContent = 'Fetching quotes...';
@@ -1015,11 +1269,11 @@
                 updateStatus(`${state.quotes.length} stocks · ${withPrices} quotes${marketStatus}`, 'success');
                 
                 renderStocks();
+                if (state.showSummary) renderSummary();
                 updateTimestamp(Date.now());
             } catch (error) {
                 console.error('Refresh error:', error);
                 
-                // If we have cached data, show it with error status
                 if (state.quotes.length > 0) {
                     updateStatus('Update failed · Using cache', 'warning');
                 } else {
@@ -1110,7 +1364,7 @@
                 state.scriptUrl = urlInput.value.trim();
                 saveState();
                 closeModal();
-                await refresh(true); // Force refresh when settings change
+                await refresh(true);
             });
         }
 
@@ -1122,7 +1376,9 @@
         async function init() {
             loadState();
             initSettingsModal();
+            
             document.getElementById('refreshBtn').addEventListener('click', () => refresh(true));
+            document.getElementById('summaryBtn').addEventListener('click', toggleView);
             
             document.getElementById('stocksContainer').addEventListener('click', (e) => {
                 const card = e.target.closest('.stock-card');
@@ -1133,7 +1389,7 @@
                 }
             });
             
-            await refresh(); // Will use cache if available
+            await refresh();
         }
 
         init();
