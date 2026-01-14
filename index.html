@@ -27,8 +27,6 @@
             --accent: #3b82f6;
             --accent-bg: rgba(59, 130, 246, 0.1);
             --warning: #f59e0b;
-            --purple: #a855f7;
-            --purple-bg: rgba(168, 85, 247, 0.1);
         }
 
         * {
@@ -100,12 +98,6 @@
             color: var(--text-primary);
         }
 
-        .icon-btn.active {
-            background: var(--accent-bg);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
         .icon-btn.spinning svg {
             animation: spin 1s linear infinite;
         }
@@ -134,93 +126,21 @@
             margin-right: 6px;
         }
 
-        .status-dot.error { background: var(--red); }
-        .status-dot.warning { background: var(--warning); }
-        .status-dot.cached { background: var(--accent); }
-
-        .summary-view { display: none; }
-        .summary-view.active { display: block; }
-        .stocks-view { display: block; }
-        .stocks-view.hidden { display: none; }
-
-        .summary-table {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            overflow: hidden;
+        .status-dot.error {
+            background: var(--red);
         }
 
-        .summary-row {
-            display: grid;
-            grid-template-columns: 1fr auto auto;
-            gap: 16px;
-            padding: 18px 20px;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
+        .status-dot.warning {
+            background: var(--warning);
         }
 
-        .summary-row:last-child {
-            border-bottom: none;
+        .status-dot.cached {
+            background: var(--accent);
         }
 
-        .summary-row.header {
-            background: var(--bg-tertiary);
-            padding: 12px 20px;
+        .sector {
+            margin-bottom: 24px;
         }
-
-        .summary-row.total {
-            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
-            border-top: 2px solid var(--accent);
-        }
-
-        .summary-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .summary-account {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .summary-account-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .summary-account-icon.retirement { background: var(--green-bg); }
-        .summary-account-icon.taxable { background: var(--purple-bg); }
-        .summary-account-icon.total { background: var(--accent-bg); }
-
-        .summary-account-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .summary-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-            text-align: right;
-            min-width: 100px;
-        }
-
-        .summary-value.positive { color: var(--green); }
-        .summary-value.negative { color: var(--red); }
-
-        .sector { margin-bottom: 24px; }
 
         .sector-header {
             display: flex;
@@ -319,7 +239,9 @@
             gap: 12px;
         }
 
-        .stock-data.default-view { display: grid; }
+        .stock-data.default-view {
+            display: grid;
+        }
 
         .stock-data.alt-view {
             display: none;
@@ -327,15 +249,22 @@
             gap: 16px;
         }
 
-        .stock-card.expanded .stock-data.default-view { display: none; }
-        .stock-card.expanded .stock-data.alt-view { display: grid; }
+        .stock-card.expanded .stock-data.default-view {
+            display: none;
+        }
+
+        .stock-card.expanded .stock-data.alt-view {
+            display: grid;
+        }
 
         .stock-card.expanded {
             background: var(--bg-tertiary);
             border-color: var(--accent);
         }
 
-        .stock-info { min-width: 0; }
+        .stock-info {
+            min-width: 0;
+        }
 
         .stock-ticker {
             font-family: 'JetBrains Mono', monospace;
@@ -380,8 +309,13 @@
             min-width: 70px;
         }
 
-        .stock-gain.positive { color: var(--green); }
-        .stock-gain.negative { color: var(--red); }
+        .stock-gain.positive {
+            color: var(--green);
+        }
+
+        .stock-gain.negative {
+            color: var(--red);
+        }
 
         .stock-change.positive {
             color: var(--green);
@@ -421,6 +355,7 @@
             color: var(--text-secondary);
         }
 
+        /* Modal Styles */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -455,7 +390,9 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        .modal.active { transform: translateY(0); }
+        .modal.active {
+            transform: translateY(0);
+        }
 
         .modal-handle {
             width: 36px;
@@ -497,7 +434,9 @@
             flex: 1;
         }
 
-        .setting-group { margin-bottom: 24px; }
+        .setting-group {
+            margin-bottom: 24px;
+        }
 
         .setting-label {
             font-size: 12px;
@@ -544,8 +483,13 @@
             transition: border-color 0.2s ease;
         }
 
-        .setting-input:focus { border-color: var(--accent); }
-        .setting-input::placeholder { color: var(--text-muted); }
+        .setting-input:focus {
+            border-color: var(--accent);
+        }
+
+        .setting-input::placeholder {
+            color: var(--text-muted);
+        }
 
         .setting-hint {
             font-size: 11px;
@@ -559,8 +503,13 @@
             color: var(--text-muted);
         }
 
-        .sheet-status.success { color: var(--green); }
-        .sheet-status.error { color: var(--red); }
+        .sheet-status.success {
+            color: var(--green);
+        }
+
+        .sheet-status.error {
+            color: var(--red);
+        }
 
         .ticker-preview {
             margin-top: 12px;
@@ -629,7 +578,9 @@
             padding: 0 20px;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
         .empty-state {
             text-align: center;
@@ -656,6 +607,7 @@
             color: var(--red);
         }
 
+        /* Sector colors */
         .sector-tech { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
         .sector-finance { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
         .sector-health { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
@@ -677,14 +629,6 @@
         <header>
             <div class="logo">PORTFOLIO</div>
             <div class="header-actions">
-                <button class="icon-btn" id="summaryBtn" title="Summary View">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="7" height="7"/>
-                        <rect x="14" y="3" width="7" height="7"/>
-                        <rect x="14" y="14" width="7" height="7"/>
-                        <rect x="3" y="14" width="7" height="7"/>
-                    </svg>
-                </button>
                 <button class="icon-btn" id="refreshBtn" title="Refresh">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
@@ -710,10 +654,10 @@
 
         <div id="errorBanner" class="error-banner" style="display: none;"></div>
 
-        <div class="summary-view" id="summaryView"></div>
-        <main id="stocksContainer" class="stocks-view"></main>
+        <main id="stocksContainer"></main>
     </div>
 
+    <!-- Settings Modal -->
     <div class="modal-overlay" id="modalOverlay"></div>
     <div class="modal" id="settingsModal">
         <div class="modal-handle"></div>
@@ -747,51 +691,77 @@
     <script>
         const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuw8GBowkDeDjXiAMlapHK9bl9429hlTYOdBU2sI0C-hlKsfsgzhkt-elytlzjBe0JbQ/exec';
         const CACHE_KEY = 'portfolioCache';
-        const CACHE_MAX_AGE = 15 * 60 * 1000;
+        const CACHE_MAX_AGE = 15 * 60 * 1000; // 15 minutes
 
-        const SECTOR_CONFIG = {
-            'Technology': { icon: '💻', class: 'sector-tech' },
-            'Tech': { icon: '💻', class: 'sector-tech' },
-            'Financial': { icon: '🏦', class: 'sector-finance' },
-            'Financials': { icon: '🏦', class: 'sector-finance' },
-            'Finance': { icon: '🏦', class: 'sector-finance' },
-            'Healthcare': { icon: '💊', class: 'sector-health' },
-            'Health Care': { icon: '💊', class: 'sector-health' },
-            'Energy': { icon: '⚡', class: 'sector-energy' },
-            'Consumer': { icon: '🛒', class: 'sector-consumer' },
-            'Consumer Discretionary': { icon: '🛒', class: 'sector-consumer' },
-            'Consumer Staples': { icon: '🛒', class: 'sector-consumer' },
-            'Telecom': { icon: '📡', class: 'sector-telecom' },
-            'Communication': { icon: '📡', class: 'sector-telecom' },
-            'Communication Services': { icon: '📡', class: 'sector-telecom' },
-            'Automotive': { icon: '🚗', class: 'sector-industrial' },
-            'Industrial': { icon: '🏭', class: 'sector-industrial' },
-            'Industrials': { icon: '🏭', class: 'sector-industrial' },
-            'Utilities': { icon: '💡', class: 'sector-energy' },
-            'Real Estate': { icon: '🏠', class: 'sector-consumer' },
-            'Conglomerate': { icon: '🏢', class: 'sector-finance' },
-            'ETF': { icon: '📊', class: 'sector-etf' },
-            'Materials': { icon: '🧱', class: 'sector-industrial' },
-            'Other': { icon: '📈', class: 'sector-other' }
+        const SECTOR_MAP = {
+            'AAPL': 'Technology', 'MSFT': 'Technology', 'NVDA': 'Technology', 'QCOM': 'Technology',
+            'TSM': 'Technology', 'NRIX': 'Technology', 'GOOGL': 'Technology', 'GOOG': 'Technology',
+            'META': 'Technology', 'AMZN': 'Technology', 'CRM': 'Technology', 'ADBE': 'Technology',
+            'INTC': 'Technology', 'AMD': 'Technology', 'AVGO': 'Technology', 'CSCO': 'Technology',
+            'ORCL': 'Technology', 'IBM': 'Technology', 'SMH': 'Technology',
+            
+            'JPM': 'Financial', 'LYG': 'Financial', 'V': 'Financial', 'WFC': 'Financial',
+            'BAC': 'Financial', 'GS': 'Financial', 'MS': 'Financial', 'C': 'Financial',
+            'AXP': 'Financial', 'BLK': 'Financial', 'MA': 'Financial', 'WFC-L': 'Financial',
+            'BAC-L': 'Financial', 'JEPI': 'Financial', 'JEPQ': 'Financial',
+            
+            'JNJ': 'Healthcare', 'LLY': 'Healthcare', 'MRK': 'Healthcare', 'NVS': 'Healthcare',
+            'PFE': 'Healthcare', 'REGN': 'Healthcare', 'VRTX': 'Healthcare', 'NTRA': 'Healthcare',
+            'ORIC': 'Healthcare', 'RVMD': 'Healthcare', 'STOK': 'Healthcare', 'UNH': 'Healthcare',
+            'ABBV': 'Healthcare', 'TMO': 'Healthcare', 'ABT': 'Healthcare', 'BMY': 'Healthcare',
+            'AMGN': 'Healthcare', 'GILD': 'Healthcare', 'EXEL': 'Healthcare',
+            
+            'PSX': 'Energy', 'SLB': 'Energy', 'XOM': 'Energy', 'CVX': 'Energy',
+            'COP': 'Energy', 'EOG': 'Energy', 'OXY': 'Energy', 'BKR': 'Energy',
+            
+            'MCD': 'Consumer', 'PM': 'Consumer', 'WMT': 'Consumer', 'KO': 'Consumer',
+            'PEP': 'Consumer', 'PG': 'Consumer', 'COST': 'Consumer', 'NKE': 'Consumer',
+            'SBUX': 'Consumer', 'HD': 'Consumer', 'DIS': 'Consumer', 'NFLX': 'Consumer',
+            
+            'T': 'Telecom', 'VZ': 'Telecom', 'TMUS': 'Telecom', 'T-A': 'Telecom',
+            
+            'RIVN': 'Automotive', 'TSLA': 'Automotive', 'F': 'Automotive', 'GM': 'Automotive',
+            
+            'CAT': 'Industrial', 'DE': 'Industrial', 'GE': 'Industrial', 'HON': 'Industrial',
+            'BA': 'Industrial',
+            
+            'DUK': 'Utilities', 'DUK-A': 'Utilities',
+            
+            'HHH': 'Real Estate',
+            
+            'BRK.B': 'Conglomerate',
+            
+            'QQQ': 'ETF', 'SPY': 'ETF', 'VOO': 'ETF', 'VTWO': 'ETF', 'VTWV': 'ETF',
+            'XLE': 'ETF', 'XLF': 'ETF', 'XLI': 'ETF', 'XLK': 'ETF', 'XLU': 'ETF',
+            'VTI': 'ETF', 'IWM': 'ETF', 'DIA': 'ETF', 'SCHD': 'ETF', 'IVV': 'ETF',
+            'IWO': 'ETF', 'INDA': 'ETF', 'EQWL': 'ETF', 'GGRW': 'ETF', 'FCLD': 'ETF'
         };
 
-        const DEFAULT_SECTOR = { icon: '📈', class: 'sector-other' };
+        const SECTOR_ICONS = {
+            'Technology': '💻', 'Financial': '🏦', 'Healthcare': '💊', 'Energy': '⚡',
+            'Consumer': '🛒', 'Telecom': '📡', 'Automotive': '🚗', 'ETF': '📊',
+            'Industrial': '🏭', 'Utilities': '💡', 'Real Estate': '🏠', 'Conglomerate': '🏢',
+            'Other': '📈'
+        };
+
+        const SECTOR_CLASSES = {
+            'Technology': 'sector-tech', 'Financial': 'sector-finance', 'Healthcare': 'sector-health',
+            'Energy': 'sector-energy', 'Consumer': 'sector-consumer', 'Telecom': 'sector-telecom',
+            'Automotive': 'sector-industrial', 'ETF': 'sector-etf', 'Industrial': 'sector-industrial',
+            'Utilities': 'sector-energy', 'Real Estate': 'sector-consumer', 'Conglomerate': 'sector-finance',
+            'Other': 'sector-other'
+        };
+
+        const SECTOR_ORDER = ['Technology', 'Financial', 'Healthcare', 'Energy', 'Consumer', 'Telecom', 'Automotive', 'Industrial', 'Utilities', 'Real Estate', 'Conglomerate', 'ETF', 'Other'];
 
         let state = {
             scriptUrl: DEFAULT_SCRIPT_URL,
             sortBy: 'ticker',
             quotes: [],
-            expandedRows: {},
-            showSummary: false
+            expandedRows: {}
         };
 
-        function getSectorConfig(sector) {
-            if (!sector) return DEFAULT_SECTOR;
-            if (SECTOR_CONFIG[sector]) return SECTOR_CONFIG[sector];
-            const key = Object.keys(SECTOR_CONFIG).find(k => k.toLowerCase() === sector.toLowerCase());
-            return key ? SECTOR_CONFIG[key] : DEFAULT_SECTOR;
-        }
-
+        // Check if US market is open (9:30 AM - 4:00 PM ET, Mon-Fri)
         function isMarketOpen() {
             const now = new Date();
             const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
@@ -799,21 +769,35 @@
             const hour = et.getHours();
             const minute = et.getMinutes();
             const time = hour * 60 + minute;
+            
+            // Weekend
             if (day === 0 || day === 6) return false;
+            
+            // Before 9:30 AM or after 4:00 PM ET
             if (time < 570 || time >= 960) return false;
+            
             return true;
         }
 
+        // Check if cache is fresh enough
         function isCacheFresh(cacheTime) {
             const age = Date.now() - cacheTime;
-            if (!isMarketOpen()) return age < 4 * 60 * 60 * 1000;
+            
+            // If market is closed, cache is good for 4 hours
+            if (!isMarketOpen()) {
+                return age < 4 * 60 * 60 * 1000;
+            }
+            
+            // If market is open, cache is good for 15 minutes
             return age < CACHE_MAX_AGE;
         }
 
         function loadCache() {
             try {
                 const cached = localStorage.getItem(CACHE_KEY);
-                if (cached) return JSON.parse(cached);
+                if (cached) {
+                    return JSON.parse(cached);
+                }
             } catch (e) {}
             return null;
         }
@@ -828,7 +812,7 @@
         }
 
         function loadState() {
-            const saved = localStorage.getItem('portfolioStateV11');
+            const saved = localStorage.getItem('portfolioStateV8');
             if (saved) {
                 const p = JSON.parse(saved);
                 state.scriptUrl = p.scriptUrl || DEFAULT_SCRIPT_URL;
@@ -837,7 +821,7 @@
         }
 
         function saveState() {
-            localStorage.setItem('portfolioStateV11', JSON.stringify({
+            localStorage.setItem('portfolioStateV8', JSON.stringify({
                 scriptUrl: state.scriptUrl,
                 sortBy: state.sortBy
             }));
@@ -852,17 +836,12 @@
         }
 
         function formatNumber(num, decimals = 2) {
-            if (num == null || isNaN(num)) return '—';
+            if (num == null) return '—';
             return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         }
 
-        function formatCurrency(num, decimals = 0) {
-            if (num == null || isNaN(num)) return '—';
-            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-        }
-
         function formatGain(gain) {
-            if (gain == null || isNaN(gain)) return '—';
+            if (gain == null) return '—';
             const sign = gain >= 0 ? '+' : '';
             return sign + '$' + formatNumber(gain, 0);
         }
@@ -871,46 +850,16 @@
             return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
         }
 
-        // Helper to normalize data for a single stock
-        function normalizeStockData(q) {
-            const price = parseFloat(q.price);
-            const quantity = parseFloat(q.quantity) || 0;
-            const costBasis = parseFloat(q.costBasis);
-            const explicitGain = parseFloat(q.gain);
-            const explicitMV = parseFloat(q.marketValue);
-            
-            // 1. Calculate Market Value
-            // Use explicit if available, otherwise Price * Quantity
-            let mv = !isNaN(explicitMV) ? explicitMV : (!isNaN(price) ? price * quantity : 0);
-            
-            // 2. Calculate Gain (Individual)
-            let gain = null;
-            if (!isNaN(explicitGain)) {
-                gain = explicitGain;
-            } else if (!isNaN(costBasis) && costBasis > 0) {
-                gain = mv - costBasis;
-            }
-            
-            return {
-                ...q,
-                _parsed: {
-                    price: price,
-                    mv: mv,
-                    gain: gain,
-                    costBasis: !isNaN(costBasis) ? costBasis : 0 // Ensure 0 if missing for safe math
-                }
-            };
+        function getSector(ticker) {
+            return SECTOR_MAP[ticker] || 'Other';
         }
 
         function sortStocks(stocks) {
             return stocks.sort((a, b) => {
-                const dataA = normalizeStockData(a)._parsed;
-                const dataB = normalizeStockData(b)._parsed;
-                
                 switch (state.sortBy) {
-                    case 'changePercent': return (parseFloat(b.changePercent) || 0) - (parseFloat(a.changePercent) || 0);
-                    case 'price': return (dataB.price || 0) - (dataA.price || 0);
-                    case 'gain': return (dataB.gain || 0) - (dataA.gain || 0);
+                    case 'changePercent': return (b.changePercent || 0) - (a.changePercent || 0);
+                    case 'price': return (b.price || 0) - (a.price || 0);
+                    case 'gain': return (b.gain || 0) - (a.gain || 0);
                     default: return (a.symbol || '').localeCompare(b.symbol || '');
                 }
             });
@@ -919,7 +868,7 @@
         function groupBySector() {
             const grouped = {};
             state.quotes.forEach(quote => {
-                const sector = quote.sector || 'Other';
+                const sector = getSector(quote.symbol);
                 if (!grouped[sector]) grouped[sector] = [];
                 grouped[sector].push(quote);
             });
@@ -927,97 +876,9 @@
             return grouped;
         }
 
-        function getSortedSectors(grouped) {
-            return Object.keys(grouped).sort((a, b) => {
-                if (a === 'Other') return 1;
-                if (b === 'Other') return -1;
-                return a.localeCompare(b);
-            });
-        }
-
-        function calculateSummary() {
-            // New "Sum of Totals" Method:
-            // 1. Sum up all Market Value
-            // 2. Sum up all Cost Basis
-            // 3. Gain = Total MV - Total Cost
-            
-            const summary = {
-                retirement: { marketValue: 0, costBasis: 0, gain: 0 },
-                taxable: { marketValue: 0, costBasis: 0, gain: 0 },
-                total: { marketValue: 0, costBasis: 0, gain: 0 }
-            };
-
-            state.quotes.forEach(q => {
-                const data = normalizeStockData(q)._parsed;
-                
-                const type = (q.accountType || '').toLowerCase();
-                const isRetirement = type.includes('retire') || 
-                                     type.includes('ira') || 
-                                     type.includes('401') || 
-                                     type.includes('roth') || 
-                                     type.includes('pension');
-                
-                const key = isRetirement ? 'retirement' : 'taxable';
-
-                summary[key].marketValue += data.mv;
-                summary[key].costBasis += data.costBasis;
-            });
-
-            // Calculate Gains via subtraction of totals
-            summary.retirement.gain = summary.retirement.marketValue - summary.retirement.costBasis;
-            summary.taxable.gain = summary.taxable.marketValue - summary.taxable.costBasis;
-
-            // Total Up
-            summary.total.marketValue = summary.retirement.marketValue + summary.taxable.marketValue;
-            summary.total.costBasis = summary.retirement.costBasis + summary.taxable.costBasis;
-            summary.total.gain = summary.total.marketValue - summary.total.costBasis;
-
-            return summary;
-        }
-
-        function renderSummary() {
-            const container = document.getElementById('summaryView');
-            const summary = calculateSummary();
-
-            container.innerHTML = `
-                <div class="summary-table">
-                    <div class="summary-row header">
-                        <div class="summary-label">Account Type</div>
-                        <div class="summary-label">Current Value</div>
-                        <div class="summary-label">Gain</div>
-                    </div>
-                    <div class="summary-row">
-                        <div class="summary-account">
-                            <div class="summary-account-icon retirement">🏦</div>
-                            <div class="summary-account-name">Retirement</div>
-                        </div>
-                        <div class="summary-value">${formatCurrency(summary.retirement.marketValue)}</div>
-                        <div class="summary-value ${summary.retirement.gain >= 0 ? 'positive' : 'negative'}">${formatGain(summary.retirement.gain)}</div>
-                    </div>
-                    <div class="summary-row">
-                        <div class="summary-account">
-                            <div class="summary-account-icon taxable">💼</div>
-                            <div class="summary-account-name">Taxable</div>
-                        </div>
-                        <div class="summary-value">${formatCurrency(summary.taxable.marketValue)}</div>
-                        <div class="summary-value ${summary.taxable.gain >= 0 ? 'positive' : 'negative'}">${formatGain(summary.taxable.gain)}</div>
-                    </div>
-                    <div class="summary-row total">
-                        <div class="summary-account">
-                            <div class="summary-account-icon total">📊</div>
-                            <div class="summary-account-name">Total</div>
-                        </div>
-                        <div class="summary-value">${formatCurrency(summary.total.marketValue)}</div>
-                        <div class="summary-value ${summary.total.gain >= 0 ? 'positive' : 'negative'}">${formatGain(summary.total.gain)}</div>
-                    </div>
-                </div>
-            `;
-        }
-
         function renderStocks() {
             const container = document.getElementById('stocksContainer');
             const grouped = groupBySector();
-            const sectors = getSortedSectors(grouped);
             
             if (state.quotes.length === 0) {
                 container.innerHTML = `
@@ -1029,14 +890,12 @@
             }
             
             let html = '';
-            sectors.forEach(sector => {
+            SECTOR_ORDER.forEach(sector => {
                 if (!grouped[sector]?.length) return;
-                const config = getSectorConfig(sector);
-                
                 html += `
                     <div class="sector">
                         <div class="sector-header">
-                            <div class="sector-icon ${config.class}">${config.icon}</div>
+                            <div class="sector-icon ${SECTOR_CLASSES[sector]}">${SECTOR_ICONS[sector]}</div>
                             <div class="sector-name">${sector}</div>
                             <div class="sector-count">${grouped[sector].length}</div>
                         </div>
@@ -1049,14 +908,10 @@
                         <div class="stocks-grid">`;
                 
                 grouped[sector].forEach(q => {
-                    const data = normalizeStockData(q)._parsed;
-                    const changeP = parseFloat(q.changePercent);
-                    
-                    const cls = changeP > 0 ? 'positive' : changeP < 0 ? 'negative' : 'neutral';
-                    const sign = changeP > 0 ? '+' : '';
+                    const cls = (q.changePercent || 0) > 0 ? 'positive' : (q.changePercent || 0) < 0 ? 'negative' : 'neutral';
+                    const sign = (q.changePercent || 0) > 0 ? '+' : '';
                     const isExpanded = state.expandedRows[q.symbol] || false;
-                    const gainCls = (data.gain || 0) >= 0 ? 'positive' : 'negative';
-                    
+                    const gainCls = (q.gain || 0) >= 0 ? 'positive' : 'negative';
                     html += `
                         <div class="stock-card ${isExpanded ? 'expanded' : ''}" data-symbol="${q.symbol}">
                             <div class="stock-info">
@@ -1064,14 +919,14 @@
                                 <div class="stock-name">${q.name || '—'}</div>
                             </div>
                             <div class="stock-data default-view">
-                                <div class="stock-price">${data.price != null ? '$' + formatNumber(data.price) : '—'}</div>
-                                <div class="stock-change ${cls}">${!isNaN(changeP) ? sign + formatNumber(changeP) + '%' : '—'}</div>
-                                <div class="stock-gain ${gainCls}">${formatGain(data.gain)}</div>
+                                <div class="stock-price">${q.price != null ? '$' + formatNumber(q.price) : '—'}</div>
+                                <div class="stock-change ${cls}">${q.changePercent != null ? sign + formatNumber(q.changePercent) + '%' : '—'}</div>
+                                <div class="stock-gain ${gainCls}">${formatGain(q.gain)}</div>
                             </div>
                             <div class="stock-data alt-view">
                                 <div class="alt-item">
                                     <div class="alt-label">P/E</div>
-                                    <div class="alt-value">${q.peRatio ? formatNumber(parseFloat(q.peRatio), 1) : '—'}</div>
+                                    <div class="alt-value">${q.peRatio ? formatNumber(q.peRatio, 1) : '—'}</div>
                                 </div>
                                 <div class="alt-item">
                                     <div class="alt-label">Ex-Date</div>
@@ -1079,11 +934,11 @@
                                 </div>
                                 <div class="alt-item">
                                     <div class="alt-label">Yield</div>
-                                    <div class="alt-value">${q.distYield ? formatNumber(parseFloat(q.distYield), 2) + '%' : '—'}</div>
+                                    <div class="alt-value">${q.distYield ? formatNumber(q.distYield, 2) + '%' : '—'}</div>
                                 </div>
                                 <div class="alt-item">
                                     <div class="alt-label">Cost Basis</div>
-                                    <div class="alt-value">${data.costBasis ? '$' + formatNumber(data.costBasis, 0) : '—'}</div>
+                                    <div class="alt-value">${q.costBasis ? '$' + formatNumber(q.costBasis, 0) : '—'}</div>
                                 </div>
                             </div>
                         </div>`;
@@ -1091,24 +946,6 @@
                 html += '</div></div>';
             });
             container.innerHTML = html;
-        }
-
-        function toggleView() {
-            state.showSummary = !state.showSummary;
-            const summaryView = document.getElementById('summaryView');
-            const stocksView = document.getElementById('stocksContainer');
-            const summaryBtn = document.getElementById('summaryBtn');
-
-            if (state.showSummary) {
-                renderSummary();
-                summaryView.classList.add('active');
-                stocksView.classList.add('hidden');
-                summaryBtn.classList.add('active');
-            } else {
-                summaryView.classList.remove('active');
-                stocksView.classList.remove('hidden');
-                summaryBtn.classList.remove('active');
-            }
         }
 
         function updateStatus(text, type = 'success') {
@@ -1135,14 +972,16 @@
             
             showError(null);
             
+            // Check cache first (unless force refresh)
             if (!forceRefresh) {
                 const cache = loadCache();
                 if (cache && cache.quotes && cache.quotes.length > 0) {
+                    // Show cached data immediately
                     state.quotes = cache.quotes;
                     renderStocks();
-                    if (state.showSummary) renderSummary();
                     updateTimestamp(cache.timestamp);
                     
+                    // If cache is fresh, we're done
                     if (isCacheFresh(cache.timestamp)) {
                         const withPrices = state.quotes.filter(q => q.price != null).length;
                         const marketStatus = isMarketOpen() ? '' : ' · Market Closed';
@@ -1150,10 +989,12 @@
                         return;
                     }
                     
+                    // Cache is stale, update in background
                     updateStatus(`${state.quotes.length} stocks · Updating...`, 'warning');
                 }
             }
             
+            // Show spinner only if no cached data
             if (state.quotes.length === 0) {
                 loadingOverlay.classList.remove('hidden');
                 loadingText.textContent = 'Fetching quotes...';
@@ -1174,11 +1015,11 @@
                 updateStatus(`${state.quotes.length} stocks · ${withPrices} quotes${marketStatus}`, 'success');
                 
                 renderStocks();
-                if (state.showSummary) renderSummary();
                 updateTimestamp(Date.now());
             } catch (error) {
                 console.error('Refresh error:', error);
                 
+                // If we have cached data, show it with error status
                 if (state.quotes.length > 0) {
                     updateStatus('Update failed · Using cache', 'warning');
                 } else {
@@ -1269,7 +1110,7 @@
                 state.scriptUrl = urlInput.value.trim();
                 saveState();
                 closeModal();
-                await refresh(true);
+                await refresh(true); // Force refresh when settings change
             });
         }
 
@@ -1281,9 +1122,7 @@
         async function init() {
             loadState();
             initSettingsModal();
-            
             document.getElementById('refreshBtn').addEventListener('click', () => refresh(true));
-            document.getElementById('summaryBtn').addEventListener('click', toggleView);
             
             document.getElementById('stocksContainer').addEventListener('click', (e) => {
                 const card = e.target.closest('.stock-card');
@@ -1294,7 +1133,7 @@
                 }
             });
             
-            await refresh();
+            await refresh(); // Will use cache if available
         }
 
         init();
