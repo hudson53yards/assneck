@@ -1,4 +1,907 @@
-function calculateSummary() {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Portfolio">
+    <title>Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #18181b;
+            --bg-card: #1c1c1f;
+            --border: #27272a;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --green: #22c55e;
+            --green-bg: rgba(34, 197, 94, 0.1);
+            --red: #ef4444;
+            --red-bg: rgba(239, 68, 68, 0.1);
+            --accent: #3b82f6;
+            --accent-bg: rgba(59, 130, 246, 0.1);
+            --warning: #f59e0b;
+            --purple: #a855f7;
+            --purple-bg: rgba(168, 85, 247, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 0 16px;
+            padding-top: max(16px, env(safe-area-inset-top));
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover, .icon-btn:active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .icon-btn.active {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .icon-btn.spinning svg {
+            animation: spin 1s linear infinite;
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-dot.error { background: var(--red); }
+        .status-dot.warning { background: var(--warning); }
+        .status-dot.cached { background: var(--accent); }
+
+        .summary-view { display: none; }
+        .summary-view.active { display: block; }
+        .stocks-view { display: block; }
+        .stocks-view.hidden { display: none; }
+
+        .summary-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 16px;
+            padding: 18px 20px;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-row.header {
+            background: var(--bg-tertiary);
+            padding: 12px 20px;
+        }
+
+        .summary-row.total {
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
+            border-top: 2px solid var(--accent);
+        }
+
+        .summary-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-account {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .summary-account-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .summary-account-icon.retirement { background: var(--green-bg); }
+        .summary-account-icon.taxable { background: var(--purple-bg); }
+        .summary-account-icon.total { background: var(--accent-bg); }
+
+        .summary-account-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .summary-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: right;
+            min-width: 100px;
+        }
+
+        .summary-value.positive { color: var(--green); }
+        .summary-value.negative { color: var(--red); }
+
+        .sector { margin-bottom: 24px; }
+
+        .sector-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            position: sticky;
+            top: 73px;
+            background: var(--bg-primary);
+            z-index: 50;
+        }
+
+        .sector-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .sector-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .sector-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .stocks-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .column-headers {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: var(--bg-primary);
+            position: sticky;
+            top: 117px;
+            z-index: 40;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .col-header {
+            text-align: right;
+            min-width: 60px;
+        }
+
+        .col-header:first-child {
+            text-align: left;
+            min-width: auto;
+        }
+
+        .stock-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .stock-card:active {
+            transform: scale(0.98);
+            background: var(--bg-tertiary);
+        }
+
+        .stock-data {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stock-data.default-view { display: grid; }
+
+        .stock-data.alt-view {
+            display: none;
+            grid-template-columns: auto auto auto auto;
+            gap: 16px;
+        }
+
+        .stock-card.expanded .stock-data.default-view { display: none; }
+        .stock-card.expanded .stock-data.alt-view { display: grid; }
+
+        .stock-card.expanded {
+            background: var(--bg-tertiary);
+            border-color: var(--accent);
+        }
+
+        .stock-info { min-width: 0; }
+
+        .stock-ticker {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .stock-name {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .stock-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            text-align: right;
+        }
+
+        .stock-change {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 8px;
+            min-width: 72px;
+            text-align: center;
+        }
+
+        .stock-gain {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: right;
+            min-width: 70px;
+        }
+
+        .stock-gain.positive { color: var(--green); }
+        .stock-gain.negative { color: var(--red); }
+
+        .stock-change.positive {
+            color: var(--green);
+            background: var(--green-bg);
+        }
+
+        .stock-change.negative {
+            color: var(--red);
+            background: var(--red-bg);
+        }
+
+        .stock-change.neutral {
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+        }
+
+        .alt-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .alt-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .alt-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-radius: 24px 24px 0 0;
+            max-height: 85vh;
+            max-height: 85dvh;
+            z-index: 1001;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .modal.active { transform: translateY(0); }
+
+        .modal-handle {
+            width: 36px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin: 12px auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .modal-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .setting-group { margin-bottom: 24px; }
+
+        .setting-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .setting-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .setting-option {
+            padding: 10px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .setting-option.active {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .setting-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .setting-input:focus { border-color: var(--accent); }
+        .setting-input::placeholder { color: var(--text-muted); }
+
+        .setting-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .sheet-status {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .sheet-status.success { color: var(--green); }
+        .sheet-status.error { color: var(--red); }
+
+        .ticker-preview {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            max-height: 80px;
+            overflow-y: auto;
+            word-break: break-all;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: all 0.2s ease;
+        }
+
+        .save-btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .error-banner {
+            background: var(--red-bg);
+            border: 1px solid var(--red);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--red);
+        }
+
+        .sector-tech { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .sector-finance { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+        .sector-health { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
+        .sector-energy { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .sector-consumer { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .sector-industrial { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
+        .sector-telecom { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+        .sector-etf { background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); }
+        .sector-other { background: linear-gradient(135deg, #71717a 0%, #52525b 100%); }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">Loading...</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">PORTFOLIO</div>
+            <div class="header-actions">
+                <button class="icon-btn" id="summaryBtn" title="Summary View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                </button>
+                <button class="icon-btn" id="refreshBtn" title="Refresh">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                        <path d="M21 3v5h-5"/>
+                    </svg>
+                </button>
+                <button class="icon-btn" id="settingsBtn" title="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="status-bar">
+            <div id="sheetStatus">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Loading...</span>
+            </div>
+            <div id="lastUpdated">--:--</div>
+        </div>
+
+        <div id="errorBanner" class="error-banner" style="display: none;"></div>
+
+        <div class="summary-view" id="summaryView"></div>
+        <main id="stocksContainer" class="stocks-view"></main>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="modal" id="settingsModal">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+            <div class="modal-title">Settings</div>
+            <button class="modal-close" id="modalClose">×</button>
+        </div>
+        <div class="modal-content">
+            <div class="setting-group">
+                <div class="setting-label">Google Apps Script URL</div>
+                <textarea class="setting-input" id="sheetUrlInput" rows="3" placeholder="https://script.google.com/macros/s/.../exec"></textarea>
+                <div class="setting-hint">Your deployed Apps Script web app URL</div>
+                <div class="sheet-status" id="sheetUrlStatus"></div>
+                <div class="ticker-preview" id="tickerPreview" style="display: none;"></div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">Sort Within Sectors</div>
+                <div class="setting-options" id="sortOptions">
+                    <div class="setting-option active" data-value="ticker">A-Z</div>
+                    <div class="setting-option" data-value="changePercent">% Change</div>
+                    <div class="setting-option" data-value="price">Price</div>
+                    <div class="setting-option" data-value="gain">Gain</div>
+                </div>
+            </div>
+
+            <button class="save-btn" id="saveSettings">Save & Refresh</button>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuw8GBowkDeDjXiAMlapHK9bl9429hlTYOdBU2sI0C-hlKsfsgzhkt-elytlzjBe0JbQ/exec';
+        const CACHE_KEY = 'portfolioCache';
+        const CACHE_MAX_AGE = 15 * 60 * 1000;
+
+        const SECTOR_CONFIG = {
+            'Technology': { icon: '💻', class: 'sector-tech' },
+            'Tech': { icon: '💻', class: 'sector-tech' },
+            'Financial': { icon: '🏦', class: 'sector-finance' },
+            'Financials': { icon: '🏦', class: 'sector-finance' },
+            'Finance': { icon: '🏦', class: 'sector-finance' },
+            'Healthcare': { icon: '💊', class: 'sector-health' },
+            'Health Care': { icon: '💊', class: 'sector-health' },
+            'Energy': { icon: '⚡', class: 'sector-energy' },
+            'Consumer': { icon: '🛒', class: 'sector-consumer' },
+            'Consumer Discretionary': { icon: '🛒', class: 'sector-consumer' },
+            'Consumer Staples': { icon: '🛒', class: 'sector-consumer' },
+            'Telecom': { icon: '📡', class: 'sector-telecom' },
+            'Communication': { icon: '📡', class: 'sector-telecom' },
+            'Communication Services': { icon: '📡', class: 'sector-telecom' },
+            'Automotive': { icon: '🚗', class: 'sector-industrial' },
+            'Industrial': { icon: '🏭', class: 'sector-industrial' },
+            'Industrials': { icon: '🏭', class: 'sector-industrial' },
+            'Utilities': { icon: '💡', class: 'sector-energy' },
+            'Real Estate': { icon: '🏠', class: 'sector-consumer' },
+            'Conglomerate': { icon: '🏢', class: 'sector-finance' },
+            'ETF': { icon: '📊', class: 'sector-etf' },
+            'Materials': { icon: '🧱', class: 'sector-industrial' },
+            'Other': { icon: '📈', class: 'sector-other' }
+        };
+
+        const DEFAULT_SECTOR = { icon: '📈', class: 'sector-other' };
+
+        let state = {
+            scriptUrl: DEFAULT_SCRIPT_URL,
+            sortBy: 'ticker',
+            quotes: [],
+            expandedRows: {},
+            showSummary: false
+        };
+
+        function getSectorConfig(sector) {
+            if (!sector) return DEFAULT_SECTOR;
+            if (SECTOR_CONFIG[sector]) return SECTOR_CONFIG[sector];
+            const key = Object.keys(SECTOR_CONFIG).find(k => k.toLowerCase() === sector.toLowerCase());
+            return key ? SECTOR_CONFIG[key] : DEFAULT_SECTOR;
+        }
+
+        function isMarketOpen() {
+            const now = new Date();
+            const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const day = et.getDay();
+            const hour = et.getHours();
+            const minute = et.getMinutes();
+            const time = hour * 60 + minute;
+            if (day === 0 || day === 6) return false;
+            if (time < 570 || time >= 960) return false;
+            return true;
+        }
+
+        function isCacheFresh(cacheTime) {
+            const age = Date.now() - cacheTime;
+            if (!isMarketOpen()) return age < 4 * 60 * 60 * 1000;
+            return age < CACHE_MAX_AGE;
+        }
+
+        function loadCache() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) return JSON.parse(cached);
+            } catch (e) {}
+            return null;
+        }
+
+        function saveCache(quotes) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    quotes: quotes,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {}
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('portfolioStateV11');
+            if (saved) {
+                const p = JSON.parse(saved);
+                state.scriptUrl = p.scriptUrl || DEFAULT_SCRIPT_URL;
+                state.sortBy = p.sortBy || 'ticker';
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('portfolioStateV11', JSON.stringify({
+                scriptUrl: state.scriptUrl,
+                sortBy: state.sortBy
+            }));
+        }
+
+        async function fetchQuotes() {
+            const response = await fetch(state.scriptUrl);
+            if (!response.ok) throw new Error(`Script error: ${response.status}`);
+            const quotes = await response.json();
+            if (!Array.isArray(quotes)) throw new Error('Invalid response from script');
+            return quotes;
+        }
+
+        function formatNumber(num, decimals = 2) {
+            if (num == null) return '—';
+            return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        function formatCurrency(num, decimals = 0) {
+            if (num == null) return '—';
+            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        function formatGain(gain) {
+            if (gain == null) return '—';
+            const sign = gain >= 0 ? '+' : '';
+            return sign + '$' + formatNumber(gain, 0);
+        }
+
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+
+        function sortStocks(stocks) {
+            return stocks.sort((a, b) => {
+                switch (state.sortBy) {
+                    case 'changePercent': return (b.changePercent || 0) - (a.changePercent || 0);
+                    case 'price': return (b.price || 0) - (a.price || 0);
+                    case 'gain': return (b.gain || 0) - (a.gain || 0);
+                    default: return (a.symbol || '').localeCompare(b.symbol || '');
+                }
+            });
+        }
+
+        function groupBySector() {
+            const grouped = {};
+            state.quotes.forEach(quote => {
+                const sector = quote.sector || 'Other';
+                if (!grouped[sector]) grouped[sector] = [];
+                grouped[sector].push(quote);
+            });
+            Object.keys(grouped).forEach(s => grouped[s] = sortStocks(grouped[s]));
+            return grouped;
+        }
+
+        function getSortedSectors(grouped) {
+            return Object.keys(grouped).sort((a, b) => {
+                if (a === 'Other') return 1;
+                if (b === 'Other') return -1;
+                return a.localeCompare(b);
+            });
+        }
+
+        function calculateSummary() {
             const summary = {
                 retirement: { marketValue: 0, gain: 0 },
                 taxable: { marketValue: 0, gain: 0 },
@@ -47,3 +950,326 @@ function calculateSummary() {
 
             return summary;
         }
+
+        function renderSummary() {
+            const container = document.getElementById('summaryView');
+            const summary = calculateSummary();
+
+            container.innerHTML = `
+                <div class="summary-table">
+                    <div class="summary-row header">
+                        <div class="summary-label">Account Type</div>
+                        <div class="summary-label">Current Value</div>
+                        <div class="summary-label">Gain</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-account">
+                            <div class="summary-account-icon retirement">🏦</div>
+                            <div class="summary-account-name">Retirement</div>
+                        </div>
+                        <div class="summary-value">${formatCurrency(summary.retirement.marketValue)}</div>
+                        <div class="summary-value ${summary.retirement.gain >= 0 ? 'positive' : 'negative'}">${formatGain(summary.retirement.gain)}</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-account">
+                            <div class="summary-account-icon taxable">💼</div>
+                            <div class="summary-account-name">Taxable</div>
+                        </div>
+                        <div class="summary-value">${formatCurrency(summary.taxable.marketValue)}</div>
+                        <div class="summary-value ${summary.taxable.gain >= 0 ? 'positive' : 'negative'}">${formatGain(summary.taxable.gain)}</div>
+                    </div>
+                    <div class="summary-row total">
+                        <div class="summary-account">
+                            <div class="summary-account-icon total">📊</div>
+                            <div class="summary-account-name">Total</div>
+                        </div>
+                        <div class="summary-value">${formatCurrency(summary.total.marketValue)}</div>
+                        <div class="summary-value ${summary.total.gain >= 0 ? 'positive' : 'negative'}">${formatGain(summary.total.gain)}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStocks() {
+            const container = document.getElementById('stocksContainer');
+            const grouped = groupBySector();
+            const sectors = getSortedSectors(grouped);
+            
+            if (state.quotes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <div class="empty-state-text">No stocks loaded.<br>Check settings.</div>
+                    </div>`;
+                return;
+            }
+            
+            let html = '';
+            sectors.forEach(sector => {
+                if (!grouped[sector]?.length) return;
+                const config = getSectorConfig(sector);
+                
+                html += `
+                    <div class="sector">
+                        <div class="sector-header">
+                            <div class="sector-icon ${config.class}">${config.icon}</div>
+                            <div class="sector-name">${sector}</div>
+                            <div class="sector-count">${grouped[sector].length}</div>
+                        </div>
+                        <div class="column-headers">
+                            <div class="col-header">Symbol</div>
+                            <div class="col-header">Price</div>
+                            <div class="col-header">Change</div>
+                            <div class="col-header">Gain</div>
+                        </div>
+                        <div class="stocks-grid">`;
+                
+                grouped[sector].forEach(q => {
+                    const cls = (q.changePercent || 0) > 0 ? 'positive' : (q.changePercent || 0) < 0 ? 'negative' : 'neutral';
+                    const sign = (q.changePercent || 0) > 0 ? '+' : '';
+                    const isExpanded = state.expandedRows[q.symbol] || false;
+                    const gainCls = (q.gain || 0) >= 0 ? 'positive' : 'negative';
+                    html += `
+                        <div class="stock-card ${isExpanded ? 'expanded' : ''}" data-symbol="${q.symbol}">
+                            <div class="stock-info">
+                                <div class="stock-ticker">${q.symbol}</div>
+                                <div class="stock-name">${q.name || '—'}</div>
+                            </div>
+                            <div class="stock-data default-view">
+                                <div class="stock-price">${q.price != null ? '$' + formatNumber(q.price) : '—'}</div>
+                                <div class="stock-change ${cls}">${q.changePercent != null ? sign + formatNumber(q.changePercent) + '%' : '—'}</div>
+                                <div class="stock-gain ${gainCls}">${formatGain(q.gain)}</div>
+                            </div>
+                            <div class="stock-data alt-view">
+                                <div class="alt-item">
+                                    <div class="alt-label">P/E</div>
+                                    <div class="alt-value">${q.peRatio ? formatNumber(q.peRatio, 1) : '—'}</div>
+                                </div>
+                                <div class="alt-item">
+                                    <div class="alt-label">Ex-Date</div>
+                                    <div class="alt-value">${q.exDate || '—'}</div>
+                                </div>
+                                <div class="alt-item">
+                                    <div class="alt-label">Yield</div>
+                                    <div class="alt-value">${q.distYield ? formatNumber(q.distYield, 2) + '%' : '—'}</div>
+                                </div>
+                                <div class="alt-item">
+                                    <div class="alt-label">Cost Basis</div>
+                                    <div class="alt-value">${q.costBasis ? '$' + formatNumber(q.costBasis, 0) : '—'}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                html += '</div></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleView() {
+            state.showSummary = !state.showSummary;
+            const summaryView = document.getElementById('summaryView');
+            const stocksView = document.getElementById('stocksContainer');
+            const summaryBtn = document.getElementById('summaryBtn');
+
+            if (state.showSummary) {
+                renderSummary();
+                summaryView.classList.add('active');
+                stocksView.classList.add('hidden');
+                summaryBtn.classList.add('active');
+            } else {
+                summaryView.classList.remove('active');
+                stocksView.classList.remove('hidden');
+                summaryBtn.classList.remove('active');
+            }
+        }
+
+        function updateStatus(text, type = 'success') {
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            dot.className = 'status-dot' + (type === 'error' ? ' error' : type === 'warning' ? ' warning' : type === 'cached' ? ' cached' : '');
+            statusText.textContent = text;
+        }
+
+        function updateTimestamp(timestamp) {
+            document.getElementById('lastUpdated').textContent = formatTime(timestamp || Date.now());
+        }
+
+        function showError(msg) {
+            const banner = document.getElementById('errorBanner');
+            if (msg) { banner.textContent = msg; banner.style.display = 'block'; }
+            else { banner.style.display = 'none'; }
+        }
+
+        async function refresh(forceRefresh = false) {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+            
+            showError(null);
+            
+            if (!forceRefresh) {
+                const cache = loadCache();
+                if (cache && cache.quotes && cache.quotes.length > 0) {
+                    state.quotes = cache.quotes;
+                    renderStocks();
+                    if (state.showSummary) renderSummary();
+                    updateTimestamp(cache.timestamp);
+                    
+                    if (isCacheFresh(cache.timestamp)) {
+                        const withPrices = state.quotes.filter(q => q.price != null).length;
+                        const marketStatus = isMarketOpen() ? '' : ' · Market Closed';
+                        updateStatus(`${state.quotes.length} stocks · Cached${marketStatus}`, 'cached');
+                        return;
+                    }
+                    
+                    updateStatus(`${state.quotes.length} stocks · Updating...`, 'warning');
+                }
+            }
+            
+            if (state.quotes.length === 0) {
+                loadingOverlay.classList.remove('hidden');
+                loadingText.textContent = 'Fetching quotes...';
+            }
+            
+            refreshBtn.classList.add('spinning');
+            
+            try {
+                const quotes = await fetchQuotes();
+                
+                if (quotes.length === 0) throw new Error('No quotes returned');
+                
+                state.quotes = quotes;
+                saveCache(quotes);
+                
+                const withPrices = state.quotes.filter(q => q.price != null).length;
+                const marketStatus = isMarketOpen() ? '' : ' · Market Closed';
+                updateStatus(`${state.quotes.length} stocks · ${withPrices} quotes${marketStatus}`, 'success');
+                
+                renderStocks();
+                if (state.showSummary) renderSummary();
+                updateTimestamp(Date.now());
+            } catch (error) {
+                console.error('Refresh error:', error);
+                
+                if (state.quotes.length > 0) {
+                    updateStatus('Update failed · Using cache', 'warning');
+                } else {
+                    updateStatus('Error', 'error');
+                    showError(error.message);
+                    renderStocks();
+                }
+            } finally {
+                refreshBtn.classList.remove('spinning');
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        async function testScript(url) {
+            const statusEl = document.getElementById('sheetUrlStatus');
+            const previewEl = document.getElementById('tickerPreview');
+            
+            if (!url?.trim()) {
+                statusEl.textContent = '';
+                previewEl.style.display = 'none';
+                return;
+            }
+            
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'sheet-status';
+            
+            try {
+                const response = await fetch(url.trim());
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const quotes = await response.json();
+                if (!Array.isArray(quotes)) throw new Error('Invalid response');
+                
+                const withPrices = quotes.filter(q => q.price != null).length;
+                
+                statusEl.textContent = `✓ ${quotes.length} stocks, ${withPrices} with quotes`;
+                statusEl.className = 'sheet-status success';
+                previewEl.textContent = quotes.slice(0, 10).map(q => q.symbol).join(', ') + (quotes.length > 10 ? '...' : '');
+                previewEl.style.display = 'block';
+            } catch (error) {
+                statusEl.textContent = `✗ ${error.message}`;
+                statusEl.className = 'sheet-status error';
+                previewEl.style.display = 'none';
+            }
+        }
+
+        function initSettingsModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const modal = document.getElementById('settingsModal');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const closeBtn = document.getElementById('modalClose');
+            const saveBtn = document.getElementById('saveSettings');
+            const urlInput = document.getElementById('sheetUrlInput');
+            
+            let testTimeout;
+            
+            function openModal() {
+                overlay.classList.add('active');
+                modal.classList.add('active');
+                urlInput.value = state.scriptUrl;
+                updateSettingsUI();
+                testScript(state.scriptUrl);
+            }
+            
+            function closeModal() {
+                overlay.classList.remove('active');
+                modal.classList.remove('active');
+            }
+            
+            settingsBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            overlay.addEventListener('click', closeModal);
+            
+            urlInput.addEventListener('input', () => {
+                clearTimeout(testTimeout);
+                testTimeout = setTimeout(() => testScript(urlInput.value), 500);
+            });
+            
+            document.getElementById('sortOptions').addEventListener('click', (e) => {
+                if (e.target.classList.contains('setting-option')) {
+                    document.querySelectorAll('#sortOptions .setting-option').forEach(o => o.classList.remove('active'));
+                    e.target.classList.add('active');
+                    state.sortBy = e.target.dataset.value;
+                }
+            });
+            
+            saveBtn.addEventListener('click', async () => {
+                state.scriptUrl = urlInput.value.trim();
+                saveState();
+                closeModal();
+                await refresh(true);
+            });
+        }
+
+        function updateSettingsUI() {
+            document.querySelectorAll('#sortOptions .setting-option').forEach(o => 
+                o.classList.toggle('active', o.dataset.value === state.sortBy));
+        }
+
+        async function init() {
+            loadState();
+            initSettingsModal();
+            
+            document.getElementById('refreshBtn').addEventListener('click', () => refresh(true));
+            document.getElementById('summaryBtn').addEventListener('click', toggleView);
+            
+            document.getElementById('stocksContainer').addEventListener('click', (e) => {
+                const card = e.target.closest('.stock-card');
+                if (card) {
+                    const symbol = card.dataset.symbol;
+                    state.expandedRows[symbol] = !state.expandedRows[symbol];
+                    card.classList.toggle('expanded');
+                }
+            });
+            
+            await refresh();
+        }
+
+        init();
+    </script>
+</body>
+</html>
