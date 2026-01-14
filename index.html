@@ -873,7 +873,6 @@
 
         // Helper to normalize data for a single stock
         function normalizeStockData(q) {
-            // Force parse everything as floats to prevent string concatenation
             const price = parseFloat(q.price);
             const quantity = parseFloat(q.quantity) || 0;
             const costBasis = parseFloat(q.costBasis);
@@ -884,26 +883,21 @@
             // Use explicit if available, otherwise Price * Quantity
             let mv = !isNaN(explicitMV) ? explicitMV : (!isNaN(price) ? price * quantity : 0);
             
-            // 2. Calculate Gain
+            // 2. Calculate Gain (Individual)
             let gain = null;
-            
             if (!isNaN(explicitGain)) {
-                // Use explicit gain if provided
                 gain = explicitGain;
             } else if (!isNaN(costBasis) && costBasis > 0) {
-                // Only calculate manual gain if we have a valid positive cost basis
-                // This prevents "Gain = MarketValue" when basis is missing (0)
                 gain = mv - costBasis;
             }
-            // If gain is still null here, it means we don't have enough info
             
             return {
-                ...q, // Keep original props
+                ...q,
                 _parsed: {
                     price: price,
                     mv: mv,
                     gain: gain,
-                    costBasis: costBasis
+                    costBasis: !isNaN(costBasis) ? costBasis : 0 // Ensure 0 if missing for safe math
                 }
             };
         }
@@ -942,16 +936,20 @@
         }
 
         function calculateSummary() {
+            // New "Sum of Totals" Method:
+            // 1. Sum up all Market Value
+            // 2. Sum up all Cost Basis
+            // 3. Gain = Total MV - Total Cost
+            
             const summary = {
-                retirement: { marketValue: 0, gain: 0 },
-                taxable: { marketValue: 0, gain: 0 },
-                total: { marketValue: 0, gain: 0 }
+                retirement: { marketValue: 0, costBasis: 0, gain: 0 },
+                taxable: { marketValue: 0, costBasis: 0, gain: 0 },
+                total: { marketValue: 0, costBasis: 0, gain: 0 }
             };
 
             state.quotes.forEach(q => {
                 const data = normalizeStockData(q)._parsed;
                 
-                // Determine Account Type
                 const type = (q.accountType || '').toLowerCase();
                 const isRetirement = type.includes('retire') || 
                                      type.includes('ira') || 
@@ -962,15 +960,17 @@
                 const key = isRetirement ? 'retirement' : 'taxable';
 
                 summary[key].marketValue += data.mv;
-                
-                // Only add to Total Gain if we actually have a calculated gain for this item
-                if (data.gain !== null) {
-                    summary[key].gain += data.gain;
-                }
+                summary[key].costBasis += data.costBasis;
             });
 
+            // Calculate Gains via subtraction of totals
+            summary.retirement.gain = summary.retirement.marketValue - summary.retirement.costBasis;
+            summary.taxable.gain = summary.taxable.marketValue - summary.taxable.costBasis;
+
+            // Total Up
             summary.total.marketValue = summary.retirement.marketValue + summary.taxable.marketValue;
-            summary.total.gain = summary.retirement.gain + summary.taxable.gain;
+            summary.total.costBasis = summary.retirement.costBasis + summary.taxable.costBasis;
+            summary.total.gain = summary.total.marketValue - summary.total.costBasis;
 
             return summary;
         }
