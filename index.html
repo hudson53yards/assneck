@@ -354,6 +354,15 @@
             margin-top: 2px;
         }
 
+        .stock-account {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
         .stock-price {
             font-family: 'JetBrains Mono', monospace;
             font-size: 15px;
@@ -828,7 +837,7 @@
         }
 
         function loadState() {
-            const saved = localStorage.getItem('portfolioStateV11');
+            const saved = localStorage.getItem('portfolioStateV12');
             if (saved) {
                 const p = JSON.parse(saved);
                 state.scriptUrl = p.scriptUrl || DEFAULT_SCRIPT_URL;
@@ -837,7 +846,7 @@
         }
 
         function saveState() {
-            localStorage.setItem('portfolioStateV11', JSON.stringify({
+            localStorage.setItem('portfolioStateV12', JSON.stringify({
                 scriptUrl: state.scriptUrl,
                 sortBy: state.sortBy
             }));
@@ -852,19 +861,26 @@
         }
 
         function formatNumber(num, decimals = 2) {
-            if (num == null) return '—';
+            if (num == null || isNaN(num)) return '—';
             return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         }
 
         function formatCurrency(num, decimals = 0) {
-            if (num == null) return '—';
+            if (num == null || isNaN(num)) return '—';
             return '$' + num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         }
 
         function formatGain(gain) {
-            if (gain == null) return '—';
+            if (gain == null || isNaN(gain)) return '—';
             const sign = gain >= 0 ? '+' : '';
             return sign + '$' + formatNumber(gain, 0);
+        }
+
+        function formatYield(yld) {
+            if (yld == null || isNaN(yld)) return '—';
+            // Handle if yield is already a percentage (e.g., 2.5) or decimal (e.g., 0.025)
+            const value = yld > 1 ? yld : yld * 100;
+            return formatNumber(value, 2) + '%';
         }
 
         function formatTime(timestamp) {
@@ -913,10 +929,7 @@
                 const isRetirement = type.includes('retire') || type.includes('ira') || type.includes('401');
                 const key = isRetirement ? 'retirement' : 'taxable';
 
-                // Calculate current value: price * quantity
                 const currentValue = (q.price || 0) * (q.quantity || 0);
-                
-                // Calculate gain: currentValue - costBasis
                 const gain = currentValue - (q.costBasis || 0);
 
                 summary[key].marketValue += currentValue;
@@ -1005,13 +1018,16 @@
                 grouped[sector].forEach(q => {
                     const cls = (q.changePercent || 0) > 0 ? 'positive' : (q.changePercent || 0) < 0 ? 'negative' : 'neutral';
                     const sign = (q.changePercent || 0) > 0 ? '+' : '';
-                    const isExpanded = state.expandedRows[q.symbol] || false;
+                    const isExpanded = state.expandedRows[q.symbol + q.accountType] || false;
                     const gainCls = (q.gain || 0) >= 0 ? 'positive' : 'negative';
+                    const rowKey = q.symbol + '|' + q.accountType;
+                    
                     html += `
-                        <div class="stock-card ${isExpanded ? 'expanded' : ''}" data-symbol="${q.symbol}">
+                        <div class="stock-card ${isExpanded ? 'expanded' : ''}" data-key="${rowKey}">
                             <div class="stock-info">
                                 <div class="stock-ticker">${q.symbol}</div>
                                 <div class="stock-name">${q.name || '—'}</div>
+                                <div class="stock-account">${q.accountType || '—'}</div>
                             </div>
                             <div class="stock-data default-view">
                                 <div class="stock-price">${q.price != null ? '$' + formatNumber(q.price) : '—'}</div>
@@ -1029,7 +1045,7 @@
                                 </div>
                                 <div class="alt-item">
                                     <div class="alt-label">Yield</div>
-                                    <div class="alt-value">${q.distYield ? formatNumber(q.distYield, 2) + '%' : '—'}</div>
+                                    <div class="alt-value">${formatYield(q.distYield)}</div>
                                 </div>
                                 <div class="alt-item">
                                     <div class="alt-label">Cost Basis</div>
@@ -1238,8 +1254,8 @@
             document.getElementById('stocksContainer').addEventListener('click', (e) => {
                 const card = e.target.closest('.stock-card');
                 if (card) {
-                    const symbol = card.dataset.symbol;
-                    state.expandedRows[symbol] = !state.expandedRows[symbol];
+                    const key = card.dataset.key;
+                    state.expandedRows[key] = !state.expandedRows[key];
                     card.classList.toggle('expanded');
                 }
             });
